@@ -177,45 +177,29 @@ struct BinOpOverload
 using et::expr;
 
 
-template <typename E1, typename E2>
-typename enable_if<
-   et::BinOpCheck<E1, E2>::enable,
-   typename et::BinOpOverload<op::Add, E1, E2>::expr_type
->::type
-FGSTD_FORCE_INLINE operator+ (const E1& a, const E2& b)
-{
-    return et::BinOpOverload<op::Add, E1, E2>::makeOp(a, b);
+#define _FGSTD_MAKE_BINOP(opr, cls) \
+template <typename E1, typename E2> \
+typename enable_if< \
+   et::BinOpCheck<E1, E2>::enable, \
+   typename et::BinOpOverload<op::cls, E1, E2>::expr_type \
+>::type \
+FGSTD_FORCE_INLINE operator opr (const E1& a, const E2& b) \
+{ \
+    return et::BinOpOverload<op::cls, E1, E2>::makeOp(a, b); \
 }
 
-template <typename E1, typename E2>
-typename enable_if<
-   et::BinOpCheck<E1, E2>::enable,
-   typename et::BinOpOverload<op::Sub, E1, E2>::expr_type
->::type
-FGSTD_FORCE_INLINE operator- (const E1& a, const E2& b)
-{
-    return et::BinOpOverload<op::Sub, E1, E2>::makeOp(a, b);
-}
+_FGSTD_MAKE_BINOP(+, Add)
+_FGSTD_MAKE_BINOP(-, Sub)
+_FGSTD_MAKE_BINOP(*, Mul)
+_FGSTD_MAKE_BINOP(/, Div)
+_FGSTD_MAKE_BINOP(^, Xor)
+_FGSTD_MAKE_BINOP(%, Mod)
+_FGSTD_MAKE_BINOP(&, BitAnd)
+_FGSTD_MAKE_BINOP(|, BitOr)
+_FGSTD_MAKE_BINOP(<<, Lsh)
+_FGSTD_MAKE_BINOP(>>, Rsh)
 
-template <typename E1, typename E2>
-typename enable_if<
-   et::BinOpCheck<E1, E2>::enable,
-   typename et::BinOpOverload<op::Mul, E1, E2>::expr_type
->::type
-FGSTD_FORCE_INLINE operator* (const E1& a, const E2& b)
-{
-    return et::BinOpOverload<op::Mul, E1, E2>::makeOp(a, b);
-}
-
-template <typename E1, typename E2>
-typename enable_if<
-   et::BinOpCheck<E1, E2>::enable,
-   typename et::BinOpOverload<op::Div, E1, E2>::expr_type
->::type
-FGSTD_FORCE_INLINE operator/ (const E1& a, const E2& b)
-{
-    return et::BinOpOverload<op::Div, E1, E2>::makeOp(a, b);
-}
+#undef _FGSTD_MAKE_BINOP
 
 
 }
