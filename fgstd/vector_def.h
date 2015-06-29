@@ -83,18 +83,15 @@ public:
         typedef typename container_type::size_type size_type;
 
         FGSTD_FORCE_INLINE Expr(const container_type &v)
-            : v(v)
+            : _v(v)
         {}
 
-        FGSTD_FORCE_INLINE const value_type& operator[](size_type i) const { return v[i]; }
-        //FGSTD_FORCE_INLINE       value_type& operator[](size_type i)       { return v[i]; }
-        FGSTD_FORCE_INLINE size_type  size()                         const { return v.size(); }
-
-        //FGSTD_FORCE_INLINE operator container_type&()             { return v; }
-        FGSTD_FORCE_INLINE operator container_type const&() const { return v; }
+        FGSTD_FORCE_INLINE const value_type& operator[](size_type i) const { return _v[i]; }
+        FGSTD_FORCE_INLINE size_type  size()                         const { return _v.size(); }
+        FGSTD_FORCE_INLINE operator container_type const&() const { return _v; }
 
     private:
-        const container_type& v;
+        const container_type& _v;
     };
 };
 

@@ -30,19 +30,16 @@ template<typename T>
 class ScalarExpr : public Expr<ScalarExpr<T>, ExprTraits2<T, u32> >
 {
 public:
-    ScalarExpr(const T& val) : val(val) {}
+    FGSTD_FORCE_INLINE ScalarExpr(const T& val) : _val(val) {}
     typedef u32 size_type;
     typedef T value_type;
 
-    FGSTD_FORCE_INLINE const value_type& operator[](size_type) const { return val; }
-    //FGSTD_FORCE_INLINE       value_type& operator[](size_type)       { return val; }
-    FGSTD_FORCE_INLINE       size_type  size()                   const { return 1; }
-
-    //FGSTD_FORCE_INLINE operator T&()             { return static_cast<      T&>(*this); }
-    FGSTD_FORCE_INLINE operator T const&() const { return val; }
+    FGSTD_FORCE_INLINE const value_type& operator[](size_type) const { return _val; }
+    FGSTD_FORCE_INLINE       size_type  size()                 const { return 1; }
+    FGSTD_FORCE_INLINE operator T const&() const { return _val; }
 
 private:
-    const T val;
+    const T _val;
 };
 
 // TODO: ArrayExpr
@@ -55,16 +52,15 @@ public:
     typedef typename OP::value_type value_type;
 
     FGSTD_FORCE_INLINE BinOpExpr(const E1& a, const E2& b)
-        : op(), a(a), b(b)
+        : _a(a), _b(b)
     {}
 
-    FGSTD_FORCE_INLINE size_type  size()                  const { return a.size(); }
-    FGSTD_FORCE_INLINE value_type operator[](size_type i) const { return op(a[i], b[i]); }
+    FGSTD_FORCE_INLINE size_type  size()                  const { return _a.size(); }
+    FGSTD_FORCE_INLINE value_type operator[](size_type i) const { return OP::apply(_a[i], _b[i]); }
 
 private:
-    const OP op;
-    const E1& a;
-    const E2& b;
+    const E1 _a;
+    const E2 _b;
 };
 
 
@@ -130,7 +126,7 @@ struct makeET<T, 2>
     typedef typename T::Expr type;
     FGSTD_FORCE_INLINE static type makeExpr(const T& e)
     {
-        return T::Expr(e);
+        return typename T::Expr(e);
     }
 };
 
@@ -151,7 +147,7 @@ struct makeexpr
     };
 
     typedef makeET<T, dispatch> conv;
-    typedef typename remove_ref<typename conv::type>::type type;
+    typedef typename conv::type type;
 };
 
 template<typename T>
@@ -163,10 +159,16 @@ FGSTD_FORCE_INLINE typename et::makeexpr<T>::type expr(const T& x)
 template<typename OP, typename E1, typename E2>
 struct BinOpOverload
 {
-    typedef typename enable_if<
-        et::BinOpCheck<E1, E2>::enable,
-        BinOpExpr<typename OP::template Op<typename E1::value_type>, typename makeexpr<E1>::type, typename makeexpr<E2>::type>
-    >::type expr_type;
+    typedef BinOpExpr<
+        typename OP::template Op<typename makeexpr<E1>::type::value_type>,
+        typename makeexpr<E1>::type,
+        typename makeexpr<E2>::type
+    > expr_type;
+    
+    static FGSTD_FORCE_INLINE expr_type makeOp(const E1& a, const E2& b)
+    {
+        return expr_type(expr(a), expr(b));
+    }
 };
 
 
@@ -176,41 +178,44 @@ using et::expr;
 
 
 template <typename E1, typename E2>
-typename et::BinOpOverload<op::Add, E1, E2>::expr_type
-operator+ (const E1& a, const E2& b)
+typename enable_if<
+   et::BinOpCheck<E1, E2>::enable,
+   typename et::BinOpOverload<op::Add, E1, E2>::expr_type
+>::type
+FGSTD_FORCE_INLINE operator+ (const E1& a, const E2& b)
 {
-    typename et::BinOpOverload<op::Add, E1, E2>::expr_type x((a), (b));
-    return x;
+    return et::BinOpOverload<op::Add, E1, E2>::makeOp(a, b);
 }
 
-/*
 template <typename E1, typename E2>
 typename enable_if<
-    et::BinOpCheck<E1, E2>::enable,
-    typename et::BinOpOverload<op::Sub, E1, E2>::expr_type
->::type FGSTD_FORCE_INLINE operator- (const E1& a, const E2& b)
+   et::BinOpCheck<E1, E2>::enable,
+   typename et::BinOpOverload<op::Sub, E1, E2>::expr_type
+>::type
+FGSTD_FORCE_INLINE operator- (const E1& a, const E2& b)
 {
     return et::BinOpOverload<op::Sub, E1, E2>::makeOp(a, b);
 }
 
 template <typename E1, typename E2>
 typename enable_if<
-    et::BinOpCheck<E1, E2>::enable,
-    typename et::BinOpOverload<op::Mul, E1, E2>::expr_type
->::type FGSTD_FORCE_INLINE operator* (const E1& a, const E2& b)
+   et::BinOpCheck<E1, E2>::enable,
+   typename et::BinOpOverload<op::Mul, E1, E2>::expr_type
+>::type
+FGSTD_FORCE_INLINE operator* (const E1& a, const E2& b)
 {
     return et::BinOpOverload<op::Mul, E1, E2>::makeOp(a, b);
 }
 
-
 template <typename E1, typename E2>
 typename enable_if<
-    et::BinOpCheck<E1, E2>::enable,
-    typename et::BinOpOverload<op::Div, E1, E2>::expr_type
->::type FGSTD_FORCE_INLINE operator/ (const E1& a, const E2& b)
+   et::BinOpCheck<E1, E2>::enable,
+   typename et::BinOpOverload<op::Div, E1, E2>::expr_type
+>::type
+FGSTD_FORCE_INLINE operator/ (const E1& a, const E2& b)
 {
     return et::BinOpOverload<op::Div, E1, E2>::makeOp(a, b);
 }
-*/
+
 
 }

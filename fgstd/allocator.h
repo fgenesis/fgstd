@@ -9,6 +9,7 @@ namespace fgstd {
 class IAllocator
 {
 public:
+    virtual ~IAllocator() {}
     virtual void *Alloc(size_t size) = 0;
     virtual void Free(void *p) = 0;
 };
@@ -20,6 +21,10 @@ class VAllocator : public IAllocator
 public:
     VAllocator(const A& a = A())
         : alloc(a)
+    {
+    }
+    
+    virtual ~VAllocator()
     {
     }
 

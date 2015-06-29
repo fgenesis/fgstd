@@ -47,3 +47,7 @@
 #    define FGSTD_USE_CPP11 1
 #  endif
 #endif
+
+#undef FGSTD_FORCE_INLINE
+#define FGSTD_FORCE_INLINE
+

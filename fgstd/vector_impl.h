@@ -305,7 +305,7 @@ FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const vector<T> &v)
 template<typename T> template<typename E>
 FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const E& e)
 {
-    u32 sz = e.size();
+    const u32 sz = e.size();
     _resize_noinit(sz);
     if(is_pod<T>::value)
         for(u32 i = 0; i < sz; ++i)

@@ -13,7 +13,7 @@ struct Add
         typedef T value_type;
 
         template<typename A, typename B>
-        FGSTD_FORCE_INLINE T operator()(const A& a, const B& b) const
+        static FGSTD_FORCE_INLINE T apply(const A& a, const B& b)
         {
             return a + b;
         }
@@ -28,7 +28,7 @@ struct Sub
         typedef T value_type;
 
         template<typename A, typename B>
-        FGSTD_FORCE_INLINE T operator()(const A& a, const B& b) const
+        static FGSTD_FORCE_INLINE T apply(const A& a, const B& b)
         {
             return a - b;
         }
@@ -43,7 +43,7 @@ struct Mul
         typedef T value_type;
 
         template<typename A, typename B>
-        FGSTD_FORCE_INLINE T operator()(const A& a, const B& b) const
+        static FGSTD_FORCE_INLINE T apply(const A& a, const B& b)
         {
             return a * b;
         }
@@ -58,7 +58,7 @@ struct Div
         typedef T value_type;
 
         template<typename A, typename B>
-        FGSTD_FORCE_INLINE T operator()(const A& a, const B& b) const
+        static FGSTD_FORCE_INLINE T apply(const A& a, const B& b)
         {
             return a / b;
         }
