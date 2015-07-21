@@ -19,4 +19,38 @@ public:
     FGSTD_FORCE_INLINE operator E const&() const { return static_cast<const E&>(*this); }
 };
 
+
+
+template <typename T>
+struct has_internal_expr_type
+{
+    typedef char yes[1];
+    typedef char no[2];
+
+    template <typename C> static yes& test(typename C::Expr*);
+    template <typename> static no& test(...);
+
+    enum { value = sizeof(test<T>(0)) == sizeof(yes) };
+};
+
+template <typename T>
+struct is_expr_type
+{
+    typedef char yes[1];
+    typedef char no[2];
+
+    template <typename C> static yes& test(typename C::is_expr_tag*);
+    template <typename> static no& test(...);
+
+    enum { value = sizeof(test<T>(0)) == sizeof(yes) };
+};
+
+template <typename T>
+struct is_usable_expr
+{
+    enum { value = is_expr_type<T>::value || has_internal_expr_type<T>::value };
+};
+
+
+
 }}

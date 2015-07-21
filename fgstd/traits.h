@@ -1,35 +1,147 @@
 #pragma once
 
 #include "platform.h"
+#include "types.h"
 
 namespace fgstd {
+
+template <bool B, typename T = void> struct enable_if { };
+template <typename T>                struct enable_if<true, T> { typedef T type; };
+
+template<typename T, typename U> struct is_same;
+
 
 namespace priv {
 
 template <typename T, T v>
 struct IntegralConstant
 {
-    typedef T ValueType;
+    typedef T value_type;
     typedef IntegralConstant<T,v> type;
     enum { value = v };
 };
 
 typedef IntegralConstant<bool, true>  CompileTrue;
 typedef IntegralConstant<bool, false> CompileFalse;
+template<bool V> struct CompileCheck : IntegralConstant<bool, V>{};
 
-}
+template <typename T> struct is_integral        : CompileFalse{};
+template<> struct is_integral<bool>             : CompileTrue{};
+template<> struct is_integral<char>             : CompileTrue{};
+template<> struct is_integral<unsigned char>    : CompileTrue{};
+template<> struct is_integral<signed char>      : CompileTrue{};
+template<> struct is_integral<short>            : CompileTrue{};
+template<> struct is_integral<unsigned short>   : CompileTrue{};
+template<> struct is_integral<int>              : CompileTrue{};
+template<> struct is_integral<unsigned int>     : CompileTrue{};
+template<> struct is_integral<long>             : CompileTrue{};
+template<> struct is_integral<unsigned long>    : CompileTrue{};
 
-template <bool B, typename T = void> struct enable_if          { };
-template <typename T>                struct enable_if<true, T> { typedef T type; };
+template<> struct is_integral<types::s64>       : CompileTrue{};
+template<> struct is_integral<types::u64>       : CompileTrue{};
 
-template<typename T, typename U> struct is_same;
+template <typename T> struct is_float           : CompileFalse {};
+template<> struct is_float<float>               : CompileTrue{};
+template<> struct is_float<double>              : CompileTrue{};
+template<> struct is_float<long double>         : CompileTrue{};
 
-template <typename T> struct remove_ref            { typedef T  type; };
-template <typename T> struct remove_ref<T&>        { typedef T  type; };
-#ifdef STDFG_USE_CPP11
-template <typename T> struct remove_ref<T&&>       { typedef T  type; };
+template <typename T> struct is_array           : CompileFalse {};
+template <typename T> struct is_array<T[]>      : CompileTrue {};
+template <typename T, size_t N> struct is_array<T[N]> : CompileTrue{};
+
+template <typename T> struct is_pointer         : CompileFalse {};
+template <typename T> struct is_pointer<T*>     : CompileTrue {};
+
+template<typename T> struct is_lvalue_reference : CompileFalse {};
+template<typename T> struct is_lvalue_reference<T&> : CompileTrue{};
+template<typename T> struct is_rvalue_reference : CompileFalse {};
+template<typename T> struct is_reference        : CompileFalse {};
+template<typename T> struct is_reference<T&>    : CompileTrue{};
+#ifdef FGSTD_USE_CPP11
+template<typename T> struct is_rvalue_reference<T&&> : CompileTrue{};
+template<typename T> struct is_reference<T&&>   : CompileTrue{};
 #endif
 
+template<bool COND, typename A, typename B> struct TypeSwitch{};
+template <typename A> struct TypeSwitch<true, A, A> { typedef A type; };
+template <typename B> struct TypeSwitch<false, B, B> { typedef B type; };
+
+template<typename T> struct is_pod_basic : CompileCheck<
+    is_integral<T>::value || is_pointer<T>::value || is_float<T>::value
+> {};
+
+template <typename T>
+struct has_value_type
+{
+    typedef char yes[1];
+    typedef char no[2];
+
+    template <typename C> static yes& test(typename C::value_type*);
+    template <typename> static no& test(...);
+
+    enum { value = sizeof(test<T>(0)) == sizeof(yes) };
+};
+
+template<bool B, typename T> struct get_value_type {};
+template<typename T> struct get_value_type<true, T> { typedef typename T::value_type type; };
+template<typename T> struct get_value_type<false, T> { typedef T type; };
+}
+
+template <typename T> struct remove_ref            { typedef T type; };
+template <typename T> struct remove_ref<T&>        { typedef T type; };
+#ifdef FGSTD_USE_CPP11
+template <typename T> struct remove_ref<T&&>       { typedef T type; };
+#endif
+
+template <typename T> struct remove_pointer            { typedef T type; };
+template <typename T> struct remove_pointer<T*>        { typedef typename remove_pointer<T>::type type; };
+
+template <typename T> struct remove_array { typedef T type; };
+template <typename T> struct remove_array<T[]> { typedef typename remove_array<T>::type type; };
+template <typename T, size_t N> struct remove_array<T[N]> { typedef typename remove_array<T>::type type; };
+
+template <typename T> struct remove_const                { typedef T  type; };
+template <typename T> struct remove_const<const T&>      { typedef T& type; };
+template <typename T> struct remove_volatile             { typedef T  type; };
+template <typename T> struct remove_volatile<volatile T> { typedef T type; };
+
+template <typename T> struct remove_cv;
+template <typename T> struct remove_cv
+{
+    typedef
+        typename remove_volatile <
+            typename remove_const<T>::type
+        >::type
+        type;
+};
+
+template <typename T> struct is_integral : priv::is_integral<typename remove_cv<T>::type> {};
+template <typename T> struct is_array : priv::is_array<typename remove_cv<T>::type> {};
+template <typename T> struct is_reference : priv::is_reference<typename remove_cv<T>::type> {};
+
+template <typename T> struct is_lvalue_reference : priv::is_lvalue_reference<typename remove_cv<T>::type> {};
+template <typename T> struct is_rvalue_reference : priv::is_rvalue_reference<typename remove_cv<T>::type> {};
+
+template<bool need_more, typename T> struct _get_basic_type_rec {};
+template<typename T> struct _get_basic_type_rec<false, T> { typedef T type; };
+template<typename T> struct _get_basic_type_rec<true, T> {
+    typedef
+        typename remove_array<
+            typename remove_ref<
+                typename remove_cv<
+                    T
+                >::type
+            >::type
+        >::type
+    X;
+
+    typedef typename _get_basic_type_rec<
+        is_array<X>::value || is_reference<X>::value,
+        X
+    >::type type;
+};
+
+template<typename T> struct get_basic_type : _get_basic_type_rec<true, T> {};
 
 
 #ifndef STDFG_USE_CPP11
@@ -73,7 +185,7 @@ struct _Alignof2
 #endif
 
 template<typename T>
-struct AlignedSize
+struct Alignof
 {
 #ifdef FGSTD_USE_CPP11
     enum { value = alignof(T) };
@@ -90,7 +202,17 @@ struct AlignedSize
 template <typename T, typename U> struct is_same      : priv::CompileFalse { };
 template <typename T>             struct is_same<T,T> : priv::CompileTrue  { };
 
-template<typename T> struct is_pod : priv::CompileFalse {};
+template<typename T> struct is_pod : priv::CompileCheck<
+#if defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__)
+    __is_pod(T)
+#else
+# pragma message("__is_pod() not provided, check this")
+    // Alternative, very basic is_pod implementation that at least considers basic types and pointers to be POD.
+    priv::is_pod_basic<
+        typename get_basic_type<T>::type
+    >::value
+#endif
+> {};
 
 
 

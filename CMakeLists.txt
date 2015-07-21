@@ -11,5 +11,6 @@ endif()
 
 include_directories(.)
 
+add_subdirectory(fgstd)
 add_subdirectory(test)
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "types.h"
-
 #include "expr_def.h"
 
 
@@ -18,21 +17,25 @@ public:
     typedef T value_type;
     typedef T& reference;
 
-    vector(u32 sz = 0, const T& def = T(), IAllocator *a = g_defaultAlloc);
+    vector(IAllocator *a = g_defaultAlloc);
+    vector(u32 sz, const T& def = T(), IAllocator *a = g_defaultAlloc);
     vector(const T *mem, u32 n, IAllocator *a = g_defaultAlloc);
 
     template<u32 SZ>
     vector(T (&arr)[SZ], IAllocator *a = g_defaultAlloc);
 
     template<typename E>
-    vector(const E& e, IAllocator *a = g_defaultAlloc);
+    vector(const et::Expr<E>& e, IAllocator *a = g_defaultAlloc);
 
     vector(const vector<T>& v);
+#ifdef FGSTD_USE_CPP11
+    vector(vector<T>&& v);
+#endif
     ~vector();
 
     // const
     u32 size() const;
-    const T& operator[](unsigned i) const;
+    const T& operator[](u32 i) const;
     u32 remain() const;
     const T *data() const;
 
@@ -41,26 +44,37 @@ public:
     void dealloc();
     void fill(const T& x);
     void resize(u32 n);
+    void resize(u32 n, const T& val);
     void reserve(u32 n);
     T pop_back();
     bool try_pop_back(T& e);
     T& push_back(const T& e);
+#ifdef FGSTD_USE_CPP11
+    T& push_back(T&& e);
+#endif
     //u32 shift_left(u32 n);
-    T& operator[](unsigned i);
+    T& operator[](u32 i);
     void swapElems(vector<T>& v);
-    void swapAll(vector<T>& v);
+    void swap(vector<T>& v);
     T *data();
+    void *emplace_new();
 
     // ops
-    vector& operator=(const vector<T>& v);
-
+#ifdef FGSTD_USE_CPP11
+    vector<T>& operator=(vector<T> v);
+#else
+    vector<T>& operator=(const vector<T>& v);
+#endif
     template<typename E>
-    vector& operator=(const E& e);
+    vector<T>& operator=(const et::Expr<E>& e);
+
+
 
 private:
     void _enlarge(u32 n);
     void _destroy(u32 from, u32 to);
     void _resize_noinit(u32 n);
+    void _kill();
 
     static void _copyp(T *dst, const T *src, u32 n);
     static void _initcopyp(T *dst, const T *src, u32 n);

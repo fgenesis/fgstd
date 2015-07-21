@@ -1,5 +1,7 @@
 #pragma once
 
+#include "platform.h"
+
 #ifndef _MSC_VER
 #   include <stdint.h>
 #else
@@ -31,9 +33,6 @@ typedef double   f64;
 }
 
 using namespace types;
-
-typedef void*(*AllocFunc)(void *p, size_t sz);
-
 
 
 }

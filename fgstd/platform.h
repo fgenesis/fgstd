@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #if defined(_MSC_VER)
+# define FGSTD_ALIGN(N) __declspec(align(N))
 # include <malloc.h>
 # define FGSTD_STACK_ALLOC(x) alloca(x)
 # define FGSTD_STACK_FREE(x) /* nop */
@@ -12,6 +13,7 @@
 #    define FGSTD_FORCE_INLINE __inline
 #  endif
 #elif defined(__GNUC__) || defined(__clang__)
+# define FGSTD_ALIGN(N)  __attribute__ ((aligned(N)))
 # define FGSTD_STACK_ALLOC(x) alloca(x)
 # define FGSTD_STACK_FREE(x) /* nop */
 #  ifdef NDEBUG
@@ -43,7 +45,7 @@
 #endif
 
 #ifndef FGSTD_USE_CPP11
-#  if __cplusplus > 199711L
+#  if __cplusplus > 199711L || (defined(_MSC_VER) && _MSC_VER >= 1600)
 #    define FGSTD_USE_CPP11 1
 #  endif
 #endif

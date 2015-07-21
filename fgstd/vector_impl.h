@@ -12,14 +12,17 @@
 namespace fgstd {
 
 template<typename T>
+vector<T>::vector(IAllocator *a)
+    : _arr(NULL), _sz(0), _capacity(0), _alloc(a)
+{
+}
+
+template<typename T>
 vector<T>::vector(u32 n, const T& def, IAllocator *a)
 : _arr(NULL), _sz(0), _capacity(0), _alloc(a)
 {
     if(n)
-    {
-        resize(n);
-        fill(def);
-    }
+        resize(n, def);
 }
 
 template<typename T>
@@ -35,6 +38,9 @@ vector<T>::vector(const T *mem, u32 n, IAllocator *a)
 
 template<typename T> template<u32 SZ>
 vector<T>::vector(T (&arr)[SZ], IAllocator *a)
+#ifdef FGSTD_USE_CPP11
+: vector(&arr[0], SZ, a) {}
+#else
 : _arr(NULL), _sz(0), _capacity(0), _alloc(a)
 {
     if(SZ)
@@ -43,6 +49,7 @@ vector<T>::vector(T (&arr)[SZ], IAllocator *a)
         _initcopyp(_arr, &arr[0], SZ);
     }
 }
+#endif
 
 template<typename T>
 vector<T>::vector(const vector<T>& v)
@@ -55,8 +62,25 @@ vector<T>::vector(const vector<T>& v)
     }
 }
 
+template<typename T>
+void vector<T>::_kill()
+{
+    _arr = NULL;
+    _sz = 0;
+    _capacity = 0;
+}
+
+#ifdef FGSTD_USE_CPP11
+template<typename T>
+vector<T>::vector(vector<T>&& v)
+    : _arr(v._arr), _sz(v._sz), _capacity(v._capacity), _alloc(v._alloc)
+{
+    v._kill();
+}
+#endif
+
 template<typename T> template<typename E>
-vector<T>::vector(const E& e, IAllocator *a)
+vector<T>::vector(const et::Expr<E>& e, IAllocator *a)
 : _arr(NULL), _sz(0), _capacity(0), _alloc(a)
 {
     if(const u32 sz = e.size())
@@ -103,9 +127,18 @@ void vector<T>::resize(u32 n)
 {
     const u32 oldsz = _sz;
     _resize_noinit(n);
-    if(!is_pod<T>::value)
-        for(u32 i = oldsz; i < n; ++i)
+    if (!is_pod<T>::value)
+        for (u32 i = oldsz; i < n; ++i)
             new (&_arr[i]) T();
+}
+
+template<typename T>
+void vector<T>::resize(u32 n, const T& val)
+{
+    const u32 oldsz = _sz;
+    _resize_noinit(n);
+    for(u32 i = oldsz; i < n; ++i)
+        new (&_arr[i]) T(val);
 }
 
 template<typename T>
@@ -161,13 +194,44 @@ bool vector<T>::try_pop_back(T& e)
 template<typename T>
 T& vector<T>::push_back(const T& e)
 {
-    if(_sz >= _capacity)
-        reserve(_capacity + (_capacity >> 1) + 4);
+    const u32 cap = _capacity;
+    if(_sz >= cap)
+        reserve(cap + (cap >> 1) + 4);
+
+    T& ref = _arr[_sz++];
     if(!is_pod<T>::value)
-        new (&_arr[_sz]) T(e);
+        new (&ref) T(e);
     else
-        _arr[_sz] = e;
-    return _arr[_sz++];
+        ref = e;
+    return ref;
+}
+
+#ifdef FGSTD_USE_CPP11
+template<typename T>
+T& vector<T>::push_back(T&& e)
+{
+    const u32 cap = _capacity;
+    if (_sz >= cap)
+        reserve(cap + (cap >> 1) + 4);
+
+    T& ref = _arr[_sz++];
+    if (!is_pod<T>::value)
+        new (&ref) T(e);
+    else
+        ref = e;
+    return ref;
+}
+#endif
+
+
+template<typename T>
+void *vector<T>::emplace_new()
+{
+    const u32 cap = _capacity;
+    if (_sz >= cap)
+        reserve(cap + (cap >> 1) + 4);
+
+    return &_arr[_sz++];
 }
 
 template<typename T>
@@ -198,10 +262,13 @@ FGSTD_FORCE_INLINE const T *vector<T>::data() const
 template<typename T>
 FGSTD_FORCE_INLINE void vector<T>::_enlarge(u32 n)
 {
-    size_t bytes = n * (u32)AlignedSize<T>::value;
+    u32 bytes = n * sizeof(T);
     T* p = (T*)_alloc->Alloc(bytes);
-    if(_arr)
+    if (_arr)
+    {
         _movep(p, _arr, _sz);
+        _alloc->Free(_arr);
+    }
     _arr = p;
     _capacity = n;
 }
@@ -211,7 +278,7 @@ FGSTD_FORCE_INLINE void vector<T>::_copyp(T *dst, const T *src, u32 n)
 {
     if(is_pod<T>::value)
     {
-        const size_t bytes = n * (u32)AlignedSize<T>::value;
+        const u32 bytes = n * sizeof(T);
         memcpy(dst, src, bytes);
     }
     else
@@ -226,7 +293,7 @@ FGSTD_FORCE_INLINE void vector<T>::_initcopyp(T *dst, const T *src, u32 n)
 {
     if(is_pod<T>::value)
     {
-        const size_t bytes = n * AlignedSize<T>::value;
+        const u32 bytes = n * sizeof(T);
         memcpy(dst, src, bytes);
     }
     else
@@ -288,9 +355,19 @@ FGSTD_FORCE_INLINE void vector<T>::swapElems(vector<T> &v)
 
         for(u32 i = 0; i < copysz; ++i)
             swap(_arr[i], v._arr[i]);
+
+        swap(_sz, v._sz);
     }
 }
 
+#ifdef FGSTD_USE_CPP11
+template<typename T>
+FGSTD_FORCE_INLINE vector<T>& vector<T>::operator=(vector<T> v)
+{
+    v.swap(*this);
+    return *this;
+}
+#else
 template<typename T>
 FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const vector<T> &v)
 {
@@ -301,9 +378,11 @@ FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const vector<T> &v)
     }
     return *this;
 }
+#endif
 
 template<typename T> template<typename E>
-FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const E& e)
+FGSTD_FORCE_INLINE vector<T>&
+vector<T>::operator=(const et::Expr<E>& e)
 {
     const u32 sz = e.size();
     _resize_noinit(sz);
@@ -317,18 +396,13 @@ FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const E& e)
 }
 
 template<typename T>
-FGSTD_FORCE_INLINE void vector<T>::swapAll(vector<T> &v)
+FGSTD_FORCE_INLINE void vector<T>::swap(vector<T> &v)
 {
-    swap(_sz, v._sz);
-    swap(_capacity, v._capacity);
-    swap(_arr, v._arr);
-    swap(_alloc, v._alloc);
+    fgstd::swap(_sz, v._sz);
+    fgstd::swap(_capacity, v._capacity);
+    fgstd::swap(_arr, v._arr);
+    fgstd::swap(_alloc, v._alloc);
 }
 
-template<typename T>
-FGSTD_FORCE_INLINE void swap(vector<T> &a, vector<T> &b)
-{
-    a.swapAll(b);
-}
 
 }
