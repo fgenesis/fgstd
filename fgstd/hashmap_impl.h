@@ -3,6 +3,7 @@
 #include "hashmap_def.h"
 #include "bit.h"
 #include "vector_impl.h"
+#include "util.h"
 
 namespace fgstd {
 
@@ -21,39 +22,46 @@ struct hash_cast<const char*>
 template<typename K, typename V, typename HASH, typename EQ>
 void hashmap<K, V, HASH, EQ>::bucket::swap(bucket& o)
 {
-    fgstd::swap(p, o.p);
+    fgstd::swap(hashes, o.hashes);
+    fgstd::swap(idxs, o.idxs);
     fgstd::swap(keys, o.keys);
 }
 
 template<typename K, typename V, typename HASH, typename EQ>
 void hashmap<K, V, HASH, EQ>::bucket::clear()
 {
-    p.clear();
+    hashes.clear();
+    idxs.clear();
     keys.clear();
 }
 
 template<typename K, typename V, typename HASH, typename EQ>
 hashmap<K, V, HASH, EQ>::hashmap(u32 buckets, u32 loadFactor, IAllocator *a, const HASH& h, const EQ& eq)
-    : _keys(nextPowerOf2(buckets), bucket(), a), _values(a), _loadFactor(loadFactor), _hash(h), _eq(eq)
+    : _keys(a), _values(a), _loadFactor(loadFactor), _initialBuckets(nextPowerOf2(buckets)), _hash(h), _eq(eq)
 {
 }
 
 template<typename K, typename V, typename HASH, typename EQ>
 hashmap<K, V, HASH, EQ>::hashmap(IAllocator *a, const HASH& h, const EQ& eq)
-    : _keys(BUCKETS_DEFAULT, bucket(), a), _values(a), _loadFactor(LOAD_DEFAULT), _hash(h), _eq(eq)
+    : _keys(a), _values(a), _loadFactor(LOAD_DEFAULT), _initialBuckets(BUCKETS_DEFAULT), _hash(h), _eq(eq)
 {
 }
 
 template<typename K, typename V, typename HASH, typename EQ>
 hashmap<K, V, HASH, EQ>::hashmap(const hashmap& o)
-    : _keys(o._keys), _values(o._values), _loadFactor(o._loadFactor), _hash(o._hash), _eq(o._eq)
+    : _keys(o._keys), _values(o._values), _loadFactor(o._loadFactor), _initialBuckets(o._initialBuckets), _hash(o._hash), _eq(o._eq)
 {
 }
 
 #ifdef FGSTD_USE_CPP11
 template<typename K, typename V, typename HASH, typename EQ>
 hashmap<K, V, HASH, EQ>::hashmap(const hashmap&& o)
-    : _keys(forward(o._keys)), _values(forward(o._values)), _loadFactor(forward(o._loadFactor)), _hash(forward(o._hash)), _eq(forward(o._eq))
+: _keys(forward(o._keys))
+, _values(forward(o._values))
+, _loadFactor(forward(o._loadFactor))
+, _initialBuckets(forward(o._initialBuckets))
+, _hash(forward(o._hash))
+, _eq(forward(o._eq))
 {
 }
 #endif
@@ -80,6 +88,7 @@ hashmap<K, V, HASH, EQ>& hashmap<K, V, HASH, EQ>::operator=(const hashmap<K, V, 
         _keys = o._keys;
         _values = o._values;
         _loadFactor = o._loadFactor;
+        _initialBuckets = o._initialBuckets;
         _hash = o._hash;
         _eq = o._eq;
     }
@@ -88,11 +97,12 @@ hashmap<K, V, HASH, EQ>& hashmap<K, V, HASH, EQ>::operator=(const hashmap<K, V, 
 #endif
 
 template<typename K, typename V, typename HASH, typename EQ>
-void hashmap<K, V, HASH, EQ>::swap(hashmap<K, V, HASH, EQ>& v)
+void hashmap<K, V, HASH, EQ>::swap(hashmap<K, V, HASH, EQ>& o)
 {
     swap(_keys, o._keys);
     swap(_values, o._values);
     swap(_loadFactor, o._loadFactor);
+    swap(_initialBuckets, o._initialBuckets);
     swap(_hash, o._hash);
     swap(_eq, o._eq);
 }
@@ -189,7 +199,8 @@ V& hashmap<K, V, HASH, EQ>::_insert_hash(u32 h, const K& key, const V& val)
     _enlargeIfNecessary(idx + 1);
     const u32 hh = h & (_keys.size() - 1);
 
-    new(_keys[hh].p.emplace_new()) bucket::keypair{ h, idx };
+    _keys[hh].hashes.push_back(h);
+    _keys[hh].idxs.push_back(idx);
     _keys[hh].keys.push_back(key);
 
     return _values.push_back(val);
@@ -199,12 +210,18 @@ V& hashmap<K, V, HASH, EQ>::_insert_hash(u32 h, const K& key, const V& val)
 template<typename K, typename V, typename HASH, typename EQ>
 u32 hashmap<K, V, HASH, EQ>::_realidx(u32 h, const K& key) const
 {
-    const u32 hh = h & (_keys.size() - 1);
-    const bucket& b = _keys[hh];
-    const u32 bsz = b.p.size();
-    for (u32 i = 0; i < bsz; ++i)
-        if (b.p[i].hash == h && _eq(key, b.keys[i]))
-            return b.p[i].idx;
+    const u32 ksz = _keys.size();
+    if (ksz)
+    {
+        const u32 hh = h & (ksz - 1);
+        const bucket& b = _keys[hh];
+        const u32 bsz = b.hashes.size();
+        const K * const pkeys = b.keys.data();
+        const u32 * const phashes = b.hashes.data();
+        for (u32 i = 0; i < bsz; ++i)
+            if (phashes[i] == h && _eq(key, pkeys[i]))
+            return b.idxs[i];
+    }
     return noidx;
 }
 
@@ -219,7 +236,7 @@ template<typename K, typename V, typename HASH, typename EQ>
 void hashmap<K, V, HASH, EQ>::_enlarge()
 {
     const u32 oldsz = _keys.size();
-    const u32 newsz = oldsz * 2;
+    const u32 newsz = vmax(_initialBuckets, oldsz * 2);
     _keys.resize(newsz);
 
     const u32 aa = newsz - 1;
@@ -229,11 +246,13 @@ void hashmap<K, V, HASH, EQ>::_enlarge()
         cp.clear();
         cp.swap(_keys[bid]);
         // _keys[bid] is now empty
-        const u32 sz = cp.p.size();
+        const u32 sz = cp.hashes.size();
         for (u32 j = 0; j < sz; ++j)
         {
-            const u32 ii = cp.p[j].hash & aa;
-            _keys[ii].p.push_back(FGSTD_MOVE(cp.p[j]));
+            const u32 hash = cp.hashes[j];
+            const u32 ii = hash & aa;
+            _keys[ii].hashes.push_back(hash);
+            _keys[ii].idxs.push_back(cp.idxs[j]);
             _keys[ii].keys.push_back(FGSTD_MOVE(cp.keys[j]));
         }
     }
@@ -243,8 +262,18 @@ void hashmap<K, V, HASH, EQ>::_enlarge()
 template<typename K, typename V, typename HASH, typename EQ>
 void hashmap<K, V, HASH, EQ>::clear()
 {
-    _keys.clear();
-    _values.clear();
+    if (size())
+    {
+        const u32 sz = _keys.size();
+        for (u32 i = 0; i < sz; ++i)
+        {
+            _keys[i].hashes.clear();
+            _keys[i].idxs.clear();
+            _keys[i].keys.clear();
+        }
+
+        _values.clear();
+    }
 }
 
 template<typename K, typename V, typename HASH, typename EQ>

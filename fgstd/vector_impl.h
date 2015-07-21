@@ -266,7 +266,7 @@ FGSTD_FORCE_INLINE void vector<T>::_enlarge(u32 n)
     T* p = (T*)_alloc->Alloc(bytes);
     if (_arr)
     {
-        _movep(p, _arr, _sz);
+        _initmovep(p, _arr, _sz);
         _alloc->Free(_arr);
     }
     _arr = p;
@@ -313,11 +313,19 @@ FGSTD_FORCE_INLINE void vector<T>::fill(const T& x)
 }
 
 template<typename T>
-FGSTD_FORCE_INLINE void vector<T>::_movep(T *dst, T *src, u32 n)
+FGSTD_FORCE_INLINE void vector<T>::_initmovep(T *dst, T *src, u32 n)
 {
-    // TODO: optimize for C++11
-    _copyp(dst, src, n);
-    _destroyp(src, n);
+    if (is_pod<T>::value)
+    {
+        const u32 bytes = n * sizeof(T);
+        memcpy(dst, src, bytes);
+    }
+    else
+    {
+        for (u32 i = 0; i < n; ++i)
+            new (&dst[i]) T(FGSTD_MOVE(src[i]));
+        _destroyp(src, n);
+    }
 }
 
 template<typename T>
@@ -402,6 +410,12 @@ FGSTD_FORCE_INLINE void vector<T>::swap(vector<T> &v)
     fgstd::swap(_capacity, v._capacity);
     fgstd::swap(_arr, v._arr);
     fgstd::swap(_alloc, v._alloc);
+}
+
+template<typename T>
+FGSTD_FORCE_INLINE IAllocator *vector<T>::get_alloc()
+{
+    return _alloc;
 }
 
 

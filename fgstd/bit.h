@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include "traits.h"
 
 namespace fgstd {
 namespace detail {

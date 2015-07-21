@@ -63,7 +63,7 @@ public:
 
 
 private:
-    u32 _realidx(u32 h, const K& key) const; // hash to index in _values
+    u32 _realidx(u32 h, const K& key) const; // takes key and its hash, returns index in _values or noidx
     V& _insert_hash(u32 h, const K& key, const V& val);
 
 
@@ -72,12 +72,8 @@ private:
 
     struct bucket
     {
-        struct keypair
-        {
-            u32 hash;
-            u32 idx;
-        };
-        vector<keypair> p;
+        vector<u32> hashes;
+        vector<u32> idxs;
         vector<K> keys;
 
         void swap(bucket& o);
@@ -87,6 +83,7 @@ private:
     vector<bucket> _keys;
     vector<V> _values;
     u32 _loadFactor;
+    u32 _initialBuckets;
     HASH _hash;
     EQ _eq;
 

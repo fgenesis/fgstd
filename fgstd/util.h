@@ -84,7 +84,7 @@ struct equal
 };
 
 template<typename T>
-FGSTD_FORCE_INLINE T *adressof(T& x)
+FGSTD_FORCE_INLINE T *addressof(T& x)
 {
     return (reinterpret_cast<T*>(
         &const_cast<char&>(
@@ -118,6 +118,16 @@ FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type&& x)
 }
 #endif
 
+
+template<typename T> FGSTD_FORCE_INLINE T vmin(T a, T b)
+{
+    return a < b ? a : b;
+}
+
+template<typename T> FGSTD_FORCE_INLINE T vmax(T a, T b)
+{
+    return a < b ? b : a;
+}
 
 
 }

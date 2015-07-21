@@ -69,6 +69,7 @@ public:
     vector<T>& operator=(const et::Expr<E>& e);
 
 
+    IAllocator *get_alloc();
 
 private:
     void _enlarge(u32 n);
@@ -78,7 +79,7 @@ private:
 
     static void _copyp(T *dst, const T *src, u32 n);
     static void _initcopyp(T *dst, const T *src, u32 n);
-    static void _movep(T *dst, T *src, u32 n);
+    static void _initmovep(T *dst, T *src, u32 n);
     static void _destroyp(T *p, u32 n);
 
 private:
