@@ -131,7 +131,11 @@ int main()
     printf("[5]: %u\n", hi[5]);
     printf("[8]: %u\n", hi[8]);
 
-
+    hi.remove(5);
+    printf("has 5: %u\n", hi.has(5));
+    hi[5] = 123;
+    printf("has 5: %u\n", hi.has(5));
+    printf("[5]: %u\n", hi[5]);
 
 
     return 0;

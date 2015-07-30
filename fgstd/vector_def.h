@@ -35,6 +35,7 @@ public:
 
     // const
     u32 size() const;
+    bool empty() const;
     const T& operator[](u32 i) const;
     u32 remain() const;
     const T *data() const;
@@ -46,7 +47,8 @@ public:
     void resize(u32 n);
     void resize(u32 n, const T& val);
     void reserve(u32 n);
-    T pop_back();
+    void pop_back();
+    T get_pop_back();
     bool try_pop_back(T& e);
     T& push_back(const T& e);
 #ifdef FGSTD_USE_CPP11
@@ -58,6 +60,7 @@ public:
     void swap(vector<T>& v);
     T *data();
     void *emplace_new();
+    T& back();
 
     // ops
 #ifdef FGSTD_USE_CPP11
@@ -70,6 +73,33 @@ public:
 
 
     IAllocator *get_alloc();
+
+
+    /*class const_iterator
+    {
+        public:
+        const_iterator();
+        ~const_iterator();
+        const_iterator(const const_iterator&);
+        const_iterator& operator=(const_iterator);
+        const_iterator& operator++();
+        const_iterator operator++(int);
+        const_iterator& operator +=(i32);
+        const_iterator operator+(i32) const;
+        const_iterator& operator--();
+        const_iterator operator--(int);
+        const_iterator& operator -=(i32);
+        const_iterator operator-(i32) const;
+        const reference operator*() const;
+        const i32 operator-(const_iterator&) const;
+        const reference operator[](i32) const;
+        bool operator==(const_iterator&) const;
+        bool operator!=(const_iterator&) const;
+        bool operator<(const_iterator&) const;
+        bool operator>(const_iterator&) const;
+        bool operator<=(const_iterator&) const;
+        bool operator>=(const_iterator&) const;
+    };*/
 
 private:
     void _enlarge(u32 n);

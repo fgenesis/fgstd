@@ -141,8 +141,13 @@ int main()
     fgstd::g_defaultAlloc = &defaultAlloc;
 
     const u32 ITER = 10000;
-    const u32 LOOPS = 5000;
+    const u32 LOOPS = 500;
 
+    printf("sizeof(fgstd::hashmap) = %u\n", sizeof(fgstd::hashmap<int, int>));
+    //printf("sizeof(std::unordered_map) = %u\n", sizeof(std::unordered_map<int, int>));
+    printf("sizeof(std::map) = %u\n", sizeof(std::map<int, int>));
+
+    for(u32 k = 0; k < 2; ++k)
     {
         Timer tm("fgstd::hashmap");
         fgstd::hashmap<u32, u32> m;
@@ -151,8 +156,8 @@ int main()
         {
             for (u32 i = 0; i < ITER; ++i)
                 m[i * 2] = i * 123;
-
-            for (u32 i = 0; i < ITER; ++i)
+            
+            for (u32 i = 0; i < ITER*2; ++i)
             {
                 u32 *p = m.getp(i);
                 if (p)
@@ -163,9 +168,11 @@ int main()
                 }
                 else
                     assert(i & 1);
+
+                m.remove(i);
             }
 
-            m.clear();
+            assert(m.empty());
         }
     }
 
@@ -179,7 +186,7 @@ int main()
             for (u32 i = 0; i < ITER; ++i)
                 m[i * 2] = i * 123;
 
-            for (u32 i = 0; i < ITER; ++i)
+            for (u32 i = 0; i < ITER*2; ++i)
             {
                 themap::const_iterator it = m.find(i);
                 if (it != m.end())
@@ -190,13 +197,15 @@ int main()
                 }
                 else
                     assert(i & 1);
+
+                m.erase(i);
             }
 
-            m.clear();
+            assert(m.empty());
         }
     }
 
-    {
+    /*{
         Timer tm("std::unordered_map");
         typedef std::unordered_map<u32, u32> themap;
         themap m;
@@ -206,7 +215,7 @@ int main()
             for (u32 i = 0; i < ITER; ++i)
                 m[i * 2] = i * 123;
 
-            for (u32 i = 0; i < ITER; ++i)
+            for (u32 i = 0; i < ITER*2; ++i)
             {
                 themap::const_iterator it = m.find(i);
                 if (it != m.end())
@@ -217,11 +226,13 @@ int main()
                 }
                 else
                     assert(i & 1);
+
+                m.erase(i);
             }
 
-            m.clear();
+            assert(m.empty());
         }
-    }
+    }*/
 
 
     return 0;

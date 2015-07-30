@@ -123,6 +123,13 @@ FGSTD_FORCE_INLINE u32 vector<T>::size() const
 }
 
 template<typename T>
+FGSTD_FORCE_INLINE bool vector<T>::empty() const
+{
+    return !_sz;
+}
+
+
+template<typename T>
 void vector<T>::resize(u32 n)
 {
     const u32 oldsz = _sz;
@@ -168,7 +175,16 @@ FGSTD_FORCE_INLINE unsigned vector<T>::remain() const
 }
 
 template<typename T>
-FGSTD_FORCE_INLINE T vector<T>::pop_back()
+FGSTD_FORCE_INLINE void vector<T>::pop_back()
+{
+    if(is_pod<T>::value)
+        _arr[--_sz];
+    else
+        _arr[--_sz].~T();
+}
+
+template<typename T>
+FGSTD_FORCE_INLINE T vector<T>::get_pop_back()
 {
     if(is_pod<T>::value)
         return FGSTD_MOVE(_arr[--_sz]);
@@ -417,6 +433,13 @@ FGSTD_FORCE_INLINE IAllocator *vector<T>::get_alloc()
 {
     return _alloc;
 }
+
+template<typename T>
+FGSTD_FORCE_INLINE T& vector<T>::back()
+{
+    return _arr[_sz - 1];
+}
+
 
 
 }

@@ -83,6 +83,10 @@ struct equal
     }
 };
 
+template<typename T> struct is_simple_op : priv::CompileFalse {};
+template<typename T> struct is_simple_op<less<T> > : priv::CompileTrue {};
+template<typename T> struct is_simple_op<equal<T> > : priv::CompileTrue{};
+
 template<typename T>
 FGSTD_FORCE_INLINE T *addressof(T& x)
 {
@@ -91,6 +95,7 @@ FGSTD_FORCE_INLINE T *addressof(T& x)
             reinterpret_cast<const volatile char&>(x))));
 }
 
+#ifdef FGSTD_USE_CPP11
 template<typename T>
 FGSTD_FORCE_INLINE T&& forward(const T& x)
 {
@@ -103,7 +108,6 @@ FGSTD_FORCE_INLINE T&& forward(T&& x)
     return static_cast<remove_ref<T>::type>(x);
 }
 
-#ifdef FGSTD_USE_CPP11
 template<class T>
 FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type& x)
 {

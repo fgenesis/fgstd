@@ -62,6 +62,10 @@ template<typename T> struct is_rvalue_reference<T&&> : CompileTrue{};
 template<typename T> struct is_reference<T&&>   : CompileTrue{};
 #endif
 
+template <typename T>               struct is_member_pointer : CompileFalse { };
+template <typename T, typename C>   struct is_member_pointer<T C::*> : CompileTrue{};
+
+
 template<bool COND, typename A, typename B> struct TypeSwitch{};
 template <typename A> struct TypeSwitch<true, A, A> { typedef A type; };
 template <typename B> struct TypeSwitch<false, B, B> { typedef B type; };
@@ -81,6 +85,10 @@ struct has_value_type
 
     enum { value = sizeof(test<T>(0)) == sizeof(yes) };
 };
+
+template <typename T> struct is_scalar : CompileCheck<
+    is_integral<T>::value || is_float<T>::value || is_pointer<T>::value || is_member_pointer<T>::value
+> {};
 
 template<bool B, typename T> struct get_value_type {};
 template<typename T> struct get_value_type<true, T> { typedef typename T::value_type type; };
@@ -118,6 +126,7 @@ template <typename T> struct remove_cv
 template <typename T> struct is_integral : priv::is_integral<typename remove_cv<T>::type> {};
 template <typename T> struct is_array : priv::is_array<typename remove_cv<T>::type> {};
 template <typename T> struct is_reference : priv::is_reference<typename remove_cv<T>::type> {};
+template <typename T> struct is_scalar : priv::is_scalar<typename remove_cv<T>::type> {};
 
 template <typename T> struct is_lvalue_reference : priv::is_lvalue_reference<typename remove_cv<T>::type> {};
 template <typename T> struct is_rvalue_reference : priv::is_rvalue_reference<typename remove_cv<T>::type> {};
@@ -204,14 +213,15 @@ template <typename T>             struct is_same<T,T> : priv::CompileTrue  { };
 
 template<typename T> struct is_pod : priv::CompileCheck<
 #if defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__)
-    __is_pod(T)
+    __is_pod(T) || // MSVC 2008-ish's version of this is broken, and does not report POD for trivial/integral types,
+                   // -> need to add the custom stuff below as well.
 #else
 # pragma message("__is_pod() not provided, check this")
+#endif
     // Alternative, very basic is_pod implementation that at least considers basic types and pointers to be POD.
     priv::is_pod_basic<
         typename get_basic_type<T>::type
     >::value
-#endif
 > {};
 
 

@@ -50,6 +50,17 @@
 #  endif
 #endif
 
+#if defined(_DEBUG) || !defined(NDEBUG)
+# define FGSTD_INTERNAL_DEBUG
+#endif
+
+#ifdef FGSTD_INTERNAL_DEBUG
+#  include <assert.h>
+#  define FGSTD_INTERNAL_ASSERT(x) assert(x)
+#else
+#  define FGSTD_INTERNAL_ASSERT(x)
+#endif
+
 #undef FGSTD_FORCE_INLINE
 #define FGSTD_FORCE_INLINE
 
