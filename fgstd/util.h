@@ -7,7 +7,7 @@ namespace fgstd {
 
 #ifdef FGSTD_USE_CPP11
 template <class T>
-typename remove_ref<T>::type&& move (T&& x) noexcept
+typename remove_ref<T>::type&& move (T&& x) FGSTD_NOEXCEPT
 {
     return static_cast<remove_ref<T>::type&&>(x);
 }
@@ -88,7 +88,7 @@ template<typename T> struct is_simple_op<less<T> > : priv::CompileTrue {};
 template<typename T> struct is_simple_op<equal<T> > : priv::CompileTrue{};
 
 template<typename T>
-FGSTD_FORCE_INLINE T *addressof(T& x)
+FGSTD_FORCE_INLINE T *addressof(T& x) FGSTD_NOEXCEPT
 {
     return (reinterpret_cast<T*>(
         &const_cast<char&>(
@@ -97,25 +97,25 @@ FGSTD_FORCE_INLINE T *addressof(T& x)
 
 #ifdef FGSTD_USE_CPP11
 template<typename T>
-FGSTD_FORCE_INLINE T&& forward(const T& x)
+FGSTD_FORCE_INLINE T&& forward(const T& x) FGSTD_NOEXCEPT
 {
     return static_cast<remove_ref<T>::type>(x);
 }
 
 template<typename T>
-FGSTD_FORCE_INLINE T&& forward(T&& x)
+FGSTD_FORCE_INLINE T&& forward(T&& x) FGSTD_NOEXCEPT
 {
     return static_cast<remove_ref<T>::type>(x);
 }
 
 template<class T>
-FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type& x)
+FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type& x) FGSTD_NOEXCEPT
 {
     return (static_cast<T&&>(x));
 }
 
 template<class T>
-FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type&& x)
+FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type&& x) FGSTD_NOEXCEPT
 {
     static_assert(!is_lvalue_reference<T>::value, "bad forward call");
     return (static_cast<T&&>(x));
@@ -133,6 +133,22 @@ template<typename T> FGSTD_FORCE_INLINE T vmax(T a, T b)
     return a < b ? b : a;
 }
 
+template<unsigned N, unsigned M>
+struct roundToNearestMultiple
+{
+    enum
+    {
+        _rem = N % M,
+        value = (!_rem) ? N : (N + M - _rem)
+    };
+};
+
+template<unsigned N>
+struct roundToNearestMultiple<N, 0>
+{
+    enum { value = N };
+};
+
+
 
 }
-

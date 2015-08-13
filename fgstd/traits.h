@@ -65,11 +65,6 @@ template<typename T> struct is_reference<T&&>   : CompileTrue{};
 template <typename T>               struct is_member_pointer : CompileFalse { };
 template <typename T, typename C>   struct is_member_pointer<T C::*> : CompileTrue{};
 
-
-template<bool COND, typename A, typename B> struct TypeSwitch{};
-template <typename A> struct TypeSwitch<true, A, A> { typedef A type; };
-template <typename B> struct TypeSwitch<false, B, B> { typedef B type; };
-
 template<typename T> struct is_pod_basic : CompileCheck<
     is_integral<T>::value || is_pointer<T>::value || is_float<T>::value
 > {};
@@ -93,7 +88,13 @@ template <typename T> struct is_scalar : CompileCheck<
 template<bool B, typename T> struct get_value_type {};
 template<typename T> struct get_value_type<true, T> { typedef typename T::value_type type; };
 template<typename T> struct get_value_type<false, T> { typedef T type; };
-}
+
+
+} // -----------------
+
+template<bool COND, typename A, typename B> struct TypeSwitch{};
+template <typename A, typename B> struct TypeSwitch<true, A, B> { typedef A type; };
+template <typename A, typename B> struct TypeSwitch<false, A, B> { typedef B type; };
 
 template <typename T> struct remove_ref            { typedef T type; };
 template <typename T> struct remove_ref<T&>        { typedef T type; };

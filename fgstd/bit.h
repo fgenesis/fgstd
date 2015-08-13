@@ -31,6 +31,7 @@ struct pow2builder
     };
 };
 
+
 } // end namespace detail
 
 template <typename T>
@@ -46,5 +47,6 @@ FGSTD_FORCE_INLINE nextPowerOf2(T v)
     v += !v;
     return v;
 }
+
 
 }

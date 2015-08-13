@@ -50,6 +50,16 @@
 #  endif
 #endif
 
+#ifdef FGSTD_USE_CPP11
+# define FGSTD_NOEXCEPT noexcept
+#elif defined(_MSC_VER)
+# define FGSTD_NOEXCEPT __declspec(noexcept)
+#elif defined(__GNUC__) || defined(__clang__)
+# define FGSTD_NOEXCEPT __attribute__((nothrow))
+#else
+# define FGSTD_NOEXCEPT throw()
+#endif
+
 #if defined(_DEBUG) || !defined(NDEBUG)
 # define FGSTD_INTERNAL_DEBUG
 #endif
