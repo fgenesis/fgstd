@@ -9,6 +9,7 @@ expr.h
 expr_def.h
 hashmap_def.h
 hashmap_impl.h
+mem.h
 multivector_def.h
 op.h
 platform.h

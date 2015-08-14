@@ -6,8 +6,8 @@
 //#include "scalar.h"
 #include "allocator.h"
 #include "util.h"
+#include "mem.h"
 #include <stdlib.h>
-#include <string.h>
 
 namespace fgstd {
 
@@ -32,7 +32,7 @@ vector<T>::vector(const T *mem, u32 n, IAllocator *a)
     if(n)
     {
         _resize_noinit(n);
-        _initcopyp(_arr, mem, n);
+        mem_construct_copy(_arr, mem, n);
     }
 }
 
@@ -46,7 +46,7 @@ vector<T>::vector(T (&arr)[SZ], IAllocator *a)
     if(SZ)
     {
         _resize_noinit(SZ);
-        _initcopyp(_arr, &arr[0], SZ);
+        mem_construct_copy(_arr, &arr[0], SZ);
     }
 }
 #endif
@@ -58,7 +58,7 @@ vector<T>::vector(const vector<T>& v)
     if(v._sz)
     {
         _resize_noinit(v._sz);
-        _initcopyp(_arr, v._arr, v._sz);
+        mem_construct_copy(_arr, v._arr, v._sz);
     }
 }
 
@@ -104,7 +104,7 @@ vector<T>::~vector()
 template<typename T>
 void vector<T>::clear()
 {
-    _destroy(0, _sz);
+    mem_destroy(_arr, _sz);
     _sz = 0;
 }
 template<typename T>
@@ -134,9 +134,8 @@ void vector<T>::resize(u32 n)
 {
     const u32 oldsz = _sz;
     _resize_noinit(n);
-    if (!is_pod<T>::value)
-        for (u32 i = oldsz; i < n; ++i)
-            new (&_arr[i]) T();
+    if(n > oldsz)
+        mem_construct_default(_arr + oldsz, n - oldsz);
 }
 
 template<typename T>
@@ -144,19 +143,16 @@ void vector<T>::resize(u32 n, const T& val)
 {
     const u32 oldsz = _sz;
     _resize_noinit(n);
-    for(u32 i = oldsz; i < n; ++i)
-        new (&_arr[i]) T(val);
+    if(n > oldsz)
+        mem_construct_from(_arr + oldsz, n - oldsz, val);
 }
 
 template<typename T>
 void vector<T>::_resize_noinit(u32 n)
 {
-    if(!is_pod<T>::value)
-    {
-        const u32 sz = _sz;
-        for(u32 i = n; i < sz; ++i)
-            _arr[i].~T();
-    }
+    const u32 oldsz = _sz;
+    if(n < oldsz)
+        mem_destroy(_arr + oldsz, oldsz - n);
     reserve(n);
     _sz = n;
 }
@@ -282,7 +278,7 @@ FGSTD_FORCE_INLINE void vector<T>::_enlarge(u32 n)
     T* p = (T*)_alloc->Alloc(bytes);
     if (_arr)
     {
-        _initmovep(p, _arr, _sz);
+        mem_construct_move(p, _arr, _sz);
         _alloc->Free(_arr);
     }
     _arr = p;
@@ -290,72 +286,9 @@ FGSTD_FORCE_INLINE void vector<T>::_enlarge(u32 n)
 }
 
 template<typename T>
-FGSTD_FORCE_INLINE void vector<T>::_copyp(T *dst, const T *src, u32 n)
-{
-    if(is_pod<T>::value)
-    {
-        const u32 bytes = n * sizeof(T);
-        memcpy(dst, src, bytes);
-    }
-    else
-    {
-        for(u32 i = 0; i < n; ++i)
-            dst[i] = src[i];
-    }
-}
-
-template<typename T>
-FGSTD_FORCE_INLINE void vector<T>::_initcopyp(T *dst, const T *src, u32 n)
-{
-    if(is_pod<T>::value)
-    {
-        const u32 bytes = n * sizeof(T);
-        memcpy(dst, src, bytes);
-    }
-    else
-    {
-        for(u32 i = 0; i < n; ++i)
-            new (&dst[i]) T(src[i]);
-    }
-}
-
-template<typename T>
 FGSTD_FORCE_INLINE void vector<T>::fill(const T& x)
 {
-    const u32 sz = _sz;
-    T *arr = _arr;
-    for(u32 i = 0; i < sz; ++i)
-        arr[i] = x;
-}
-
-template<typename T>
-FGSTD_FORCE_INLINE void vector<T>::_initmovep(T *dst, T *src, u32 n)
-{
-    if (is_pod<T>::value)
-    {
-        const u32 bytes = n * sizeof(T);
-        memcpy(dst, src, bytes);
-    }
-    else
-    {
-        for (u32 i = 0; i < n; ++i)
-            new (&dst[i]) T(FGSTD_MOVE(src[i]));
-        _destroyp(src, n);
-    }
-}
-
-template<typename T>
-FGSTD_FORCE_INLINE void vector<T>::_destroyp(T *p, u32 n)
-{
-    for(u32 i = 0; i < n; ++i)
-        p[i].~T();
-}
-
-template<typename T>
-FGSTD_FORCE_INLINE void vector<T>::_destroy(u32 from, u32 to)
-{
-    for(u32 i = from; i < to; ++i)
-        _arr[i].~T();
+    mem_fill(_arr, _sz ,x);
 }
 
 template<typename T>

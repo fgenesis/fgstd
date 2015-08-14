@@ -132,6 +132,21 @@ template <typename T> struct is_scalar : priv::is_scalar<typename remove_cv<T>::
 template <typename T> struct is_lvalue_reference : priv::is_lvalue_reference<typename remove_cv<T>::type> {};
 template <typename T> struct is_rvalue_reference : priv::is_rvalue_reference<typename remove_cv<T>::type> {};
 
+template <typename T>
+struct get_value_type
+{
+    typedef typename remove_cv<T>::type _B;
+    enum { hasvt = priv::has_value_type<_B>::value };
+    typedef typename remove_cv<
+        typename TypeSwitch<
+            hasvt,
+            typename priv::get_value_type<hasvt, _B>::type,
+            typename remove_pointer<_B>::type
+        >::type
+    >::type type;
+};
+
+
 template<bool need_more, typename T> struct _get_basic_type_rec {};
 template<typename T> struct _get_basic_type_rec<false, T> { typedef T type; };
 template<typename T> struct _get_basic_type_rec<true, T> {
