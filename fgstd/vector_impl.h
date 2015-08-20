@@ -278,7 +278,7 @@ FGSTD_FORCE_INLINE void vector<T>::_enlarge(u32 n)
     T* p = (T*)_alloc->Alloc(bytes);
     if (_arr)
     {
-        mem_construct_move(p, _arr, _sz);
+        mem_construct_move_destroy(p, _arr, _sz);
         _alloc->Free(_arr);
     }
     _arr = p;
@@ -331,7 +331,7 @@ FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const vector<T> &v)
     if(&v != this)
     {
         _resize_noinit(v._sz);
-        _initcopyp(_arr, v._arr, v._sz);
+        mem_copy_distinct(_arr, v._arr, v._sz);
     }
     return *this;
 }

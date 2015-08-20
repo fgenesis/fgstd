@@ -6,6 +6,7 @@
 
 #include <fgstd/vector_impl.h>
 #include <fgstd/hashmap_impl.h>
+#include <fgstd/multivector_impl.h>
 
 #include <fgstd/bit.h>
 
@@ -15,6 +16,7 @@
 #include <fgstd/cppext.h>
 
 //#include <vector>
+#include <algorithm>
 
 using namespace fgstd::types;
 
@@ -90,23 +92,38 @@ __declspec(align(32)) struct alntest
     char a[5];
 };
 
+extern void fgstd_test();
+
 int main()
 {
     fgstd::VAllocator<GlobalDefaultAlloc> defaultAlloc;
     fgstd::g_defaultAlloc = &defaultAlloc;
-/*
-    int a[] = {1,2,3,4,5};
-    fgstd::vector<int> v(a);
-    fgstd::vector<int> c = (v + v + 1) + (v * 100);
 
-    for(u32 i = 0; i < c.size(); ++i)
-        printf("[%u] = %u\n", i, c[i]);
+    fgstd_test();
 
-    printf("%u -> %u\n", 24, fgstd::nextPowerOf2(24));
-    printf("%u -> %u\n", 0, fgstd::nextPowerOf2(0));
-    printf("%u -> %u\n", 1, fgstd::nextPowerOf2(1));
-    printf("%u -> %u\n", 8, fgstd::nextPowerOf2(8));
-*/
+    /*{
+
+
+        int a[] = {1,2,3,4,5};
+        fgstd::vector<int> v(a);
+        fgstd::vector<int> c = v; //(v + v + 1) + (v * 100);
+
+        for(u32 i = 0; i < c.size(); ++i)
+            printf("[%u] = %u\n", i, c[i]);
+
+        printf("%u -> %u\n", 24, fgstd::nextPowerOf2(24));
+        printf("%u -> %u\n", 0, fgstd::nextPowerOf2(0));
+        printf("%u -> %u\n", 1, fgstd::nextPowerOf2(1));
+        printf("%u -> %u\n", 8, fgstd::nextPowerOf2(8));
+    }
+
+    puts("---");*/
+
+    /*{
+        fgstd::vector<fgstd::vector<u32> > vv(1);
+        vv[0].resize(1);
+    }*/
+
 
     //printf("size %u aln %u\n", sizeof(alntest), fgstd::Alignof<alntest>::value);
 
@@ -121,7 +138,7 @@ int main()
 
     
 
-
+    /*
     fgstd::hashmap<int, int> hi;
 
     hi[5] = 42;
@@ -136,6 +153,20 @@ int main()
     hi[5] = 123;
     printf("has 5: %u\n", hi.has(5));
     printf("[5]: %u\n", hi[5]);
+    */
+
+    typedef FGSTD_TYPELIST((u32, f32)) tl;
+    typedef fgstd::multivector<tl> mvt;
+    mvt mv;
+    mv.resize(3);
+    mvt::view<0, u32> vu = mv.getview<0>();
+    mvt::view<1, f32> vf = mv.getview<1>();
+    u32 *pu = mv.data<0>();
+    float *pf = mv.data<1>();
+    vu[0] = 0x12345678;
+    vf[0] = 0.5f;
+    vu[2] = 0x98765432;
+    vf[2] = 3.141596f;
 
 
     return 0;

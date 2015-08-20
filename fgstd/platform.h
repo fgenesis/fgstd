@@ -53,12 +53,21 @@
 #ifdef FGSTD_USE_CPP11
 # define FGSTD_NOEXCEPT noexcept
 #elif defined(_MSC_VER)
-# define FGSTD_NOEXCEPT __declspec(noexcept)
+# define FGSTD_NOEXCEPT throw()
 #elif defined(__GNUC__) || defined(__clang__)
 # define FGSTD_NOEXCEPT __attribute__((nothrow))
 #else
 # define FGSTD_NOEXCEPT throw()
 #endif
+
+#ifdef FGSTD_USE_CPP11
+# define fgstd_static_assert(expr) static_assert(expr, #expr)
+# define fgstd_static_assert_top(expr) static_assert(expr, #expr)
+#else
+# define fgstd_static_assert(expr) do{switch(0){case expr: case 0:;}}while(0)
+# define fgstd_static_assert_top(expr) static void _FGSTD_CONCAT(_fgstd_static_assert_, __LINE__)() { fgstd_static_assert(expr); }
+#endif
+
 
 #if defined(_DEBUG) || !defined(NDEBUG)
 # define FGSTD_INTERNAL_DEBUG

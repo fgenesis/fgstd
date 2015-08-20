@@ -150,5 +150,29 @@ struct roundToNearestMultiple<N, 0>
 };
 
 
+template<unsigned M>
+struct roundUp
+{
+    template<typename T>
+    static FGSTD_FORCE_INLINE T round(T n) 
+    {
+        return ((n + (M - 1)) / M) * M;
+    }
+};
+
+template<>
+struct roundUp<1>
+{
+    template<typename T>
+    static FGSTD_FORCE_INLINE T round(T n)
+    {
+       return n;
+    }
+};
+
+template<>
+struct roundUp<0>
+{};
+
 
 }

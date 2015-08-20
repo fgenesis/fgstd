@@ -11,8 +11,10 @@ hashmap_def.h
 hashmap_impl.h
 mem.h
 multivector_def.h
+multivector_impl.h
 op.h
 platform.h
+pointer.h
 scalar.h
 splaymap_def.h
 traits.h

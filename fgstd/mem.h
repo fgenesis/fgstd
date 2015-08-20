@@ -94,6 +94,27 @@ void mem_construct_move(T *dst, T *src, u32 n)
 }
 
 template<typename T>
+void mem_construct_move_destroy(T *dst, T *src, u32 n)
+{
+    if(is_pod<T>::value)
+        memcpy(dst, src, n * sizeof(T));
+    else
+        for(u32 i = 0; i < n; ++i)
+        {
+#ifdef FGSTD_USE_CPP11
+            new (addressof(dst[i])) T(FGSTD_MOVE(src[i]));
+#else
+            new (addressof(dst[i])) T();
+            swap(dst[i], src[i]);
+#endif
+            src[i].~T();
+        }
+#ifdef FGSTD_INTERNAL_DEBUG
+    memset(src, 0xae, n * sizeof(T));
+#endif
+}
+
+template<typename T>
 void mem_fill(T *dst, u32 n, const T& obj)
 {
     if(is_pod<T>::value)
