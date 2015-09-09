@@ -25,10 +25,8 @@
 #  define FGSTD_FORCE_INLINE inline
 #endif
 
-// FIXME: use global alloc instead
 #ifndef FGSTD_STACK_ALLOC
-# define FGSTD_STACK_ALLOC(x) malloc(x);
-# define FGSTD_STACK_FREE(x) free(x);
+# error FGSTD_STACK_ALLOC: dont have alloca()
 #endif
 
 // from SDL headers

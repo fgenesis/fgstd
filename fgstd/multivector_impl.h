@@ -103,6 +103,18 @@ multivector<TL>::multivector(u32 sz, IAllocator *a)
         resize(sz);
 }
 
+template<typename TL>
+multivector<TL>::multivector(const multivector<TL>& v)
+    : _base(NULL), _sz(0), _capacity(0), _alloc(v._alloc)
+{
+    if(const u32 sz = v._sz)
+    {
+        reserve(sz);
+        priv::MV_apply<multivector<TL>, priv::MV_mem_construct_copy>::apply2(_base, v._base, sz, 0);
+        _sz = sz;
+    }
+}
+
 #ifdef FGSTD_USE_CPP11
 template<typename TL>
 multivector<TL>::multivector(multivector<TL>&& v)

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <unordered_map>
+//#include <unordered_map>
 #include <map>
 
 #include <fgstd/hashmap_impl.h>
@@ -143,9 +143,9 @@ int main()
     const u32 ITER = 10000;
     const u32 LOOPS = 500;
 
-    printf("sizeof(fgstd::hashmap) = %u\n", sizeof(fgstd::hashmap<int, int>));
-    //printf("sizeof(std::unordered_map) = %u\n", sizeof(std::unordered_map<int, int>));
-    printf("sizeof(std::map) = %u\n", sizeof(std::map<int, int>));
+    printf("sizeof(fgstd::hashmap) = %u\n", (u32)sizeof(fgstd::hashmap<int, int>));
+    //printf("sizeof(std::unordered_map) = %u\n", (u32)sizeof(std::unordered_map<int, int>));
+    printf("sizeof(std::map) = %u\n", (u32)sizeof(std::map<int, int>));
 
     for(u32 k = 0; k < 2; ++k)
     {

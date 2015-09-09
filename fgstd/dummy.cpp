@@ -6,6 +6,7 @@
 #include <fgstd/cppext.h>
 
 #include <stdio.h>
+#include <assert.h>
 
 using namespace fgstd::types;
 
@@ -26,6 +27,32 @@ struct nonpod
     operator void*() { return p; }
     operator u32() { return 0; }
 };
+
+class sema
+{
+private:
+    enum State
+    {
+        DELETED = 1,
+        ALIVE = 2,
+        EMPTY = 3,
+    };
+
+public:
+    sema() : state(ALIVE) {}
+    ~sema() { assert(state != DELETED); state = DELETED; }
+    sema(const sema& o) { assert(o.state != DELETED); state = o.state; }
+    sema& operator=(const sema& o) { if(this == &o) return *this; assert(state != STATE_DELETED); assert(o.state != DELETED); state = o.state; return *this; }
+    void swap(sema& o) { assert(o.state != STATE_DELETED); assert(state != STATE_DELETED); fgstd::swap(state, o.state); }
+
+#ifdef FGSTD_USE_CPP11
+    sema(sema&& o) { assert(state != STATE_DELETED); state = o.state; o.state = EMPTY; }
+    sema& operator=(sema&& o) { assert(o.state != STATE_DELETED); assert(state != STATE_DELETED); state = o.state; o.state = EMPTY; return *this; }
+#endif
+
+    State state;
+};
+
 
 template<typename T>
 struct asz

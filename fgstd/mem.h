@@ -110,7 +110,7 @@ void mem_construct_move_destroy(T *dst, T *src, u32 n)
             src[i].~T();
         }
 #ifdef FGSTD_INTERNAL_DEBUG
-    memset(src, 0xae, n * sizeof(T));
+    memset(src, 0xaf, n * sizeof(T));
 #endif
 }
 

@@ -103,7 +103,6 @@ public:
 
 private:
     void _enlarge(u32 n);
-    void _destroy(u32 from, u32 to);
     void _resize_noinit(u32 n);
     void _kill();
 
