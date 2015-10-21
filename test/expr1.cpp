@@ -18,6 +18,79 @@
 //#include <vector>
 #include <algorithm>
 
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_NOMINMAX
+#include <Windows.h>
+
+class CHRTimer
+{
+protected:
+
+    LARGE_INTEGER m_liStart;
+    LARGE_INTEGER m_liStop;
+
+public:
+
+    CHRTimer(void)
+    {
+        m_liStart.QuadPart = m_liStop.QuadPart = 0;
+    }
+
+    ~CHRTimer(void)
+    {
+    }
+
+    // Starts the timer
+    void Start()
+    {
+        ::QueryPerformanceCounter(&m_liStart);
+    }
+
+    // Stops the timer
+    void Stop()
+    {
+        ::QueryPerformanceCounter(&m_liStop);
+    }
+
+    // Returns the counter at the last Start()
+    LONGLONG GetStartCounter()
+    {
+        return m_liStart.QuadPart;
+    }
+
+    // Returns the counter at the last Stop()
+    LONGLONG GetStopCounter()
+    {
+        return m_liStop.QuadPart;
+    }
+
+    // Returns the interval between the last Start() and Stop()
+    LONGLONG GetElapsed()
+    {
+        return (m_liStop.QuadPart - m_liStart.QuadPart);
+    }
+
+    // Returns the interval between the last Start() and Stop() in seconds
+    double GetElapsedAsSeconds()
+    {
+        LARGE_INTEGER liFrequency;
+        ::QueryPerformanceFrequency(&liFrequency);
+        return ((double)GetElapsed() / (double)liFrequency.QuadPart);
+    }
+};
+
+class Timer
+{
+public:
+    Timer(const char *s) : str(s) { t.Start(); }
+    ~Timer() {
+        t.Stop();
+        printf("[%s] Time: %f\n", str, t.GetElapsedAsSeconds());
+    }
+    const char *str;
+    CHRTimer t;
+};
+
 using namespace fgstd::types;
 
 class GlobalDefaultAlloc 
@@ -95,23 +168,85 @@ __declspec(align(32)) struct alntest
 extern void fgstd_test();
 
 
-int main()
+struct ensure_float_op_test
+{
+    typedef fgstd::op::Operators<float> Op;
+    typedef fgstd::op::detail::has_add<Op::Vec> chk;
+    typedef chk::VT VT;
+    enum { val = chk::value };
+    //typedef chk::SFINAE<Op, Op::Vec::add> xx;
+    //static_assert(val, "no add");
+
+    typedef Op::vec_type VT;
+
+    typedef fgstd::et::ScalarExpr<float> SE;
+    typedef fgstd::et::ArrayExpr<float, 8> AE;
+
+    typedef fgstd::et::BinOpExpr<fgstd::op::Add, AE, SE> ADD;
+
+};
+
+void setfl(float *p, u32 sz, float v)
+{
+    fgstd::et::expr_store(p, fgstd::expr(v));
+}
+
+void speed1(float *dst, float *a, float *b, u32 sz)
+{
+    fgstd::et::expr_store(dst, (fgstd::expr(a, sz) * fgstd::expr(b, sz) + 1.0f) * 5.0f);
+}
+
+void speed2(float *dst, float *a, float *b, u32 sz)
+{
+    for(u32 i = 0; i < sz; ++i)
+        dst[i] = ((a[i] * b[i] + 1.0f) * 5.0f);
+}
+
+
+int main(int argc)
 {
     fgstd::VAllocator<GlobalDefaultAlloc> defaultAlloc;
     fgstd::g_defaultAlloc = &defaultAlloc;
 
-    //fgstd_test();
 
-    {
-        //using namespace fgstd;
-
-
-        float a[] = {1,2,3,4,5};
+     {
+        FGSTD_ALIGN(16) float a[] = {1,2,3,4,5,6,7,8};
         fgstd::vector<float> v(a);
-        fgstd::vector<float> c = v + 100.0f; // v + 100; //(v + v + 1) + (v * 100);
+        fgstd::vector<float> c(fgstd_countof(a));
+        c = fgstd::expr(a) * 10.0f + 100.0f; // v + 100; //(v + v + 1) + (v * 100);
         for(u32 i = 0; i < c.size(); ++i)
             printf("[%u] = %f\n", i, c[i]);
     }
+
+
+
+
+    puts("----");
+
+    const u32 SZ = 1024*1012;
+    float *a = new float[SZ];
+    float *b = new float[SZ];
+    float *dst = new float[SZ];
+
+    setfl(a, SZ, 2+argc);
+    setfl(a, SZ, 3+argc);
+    {
+        Timer tm("Vec");
+        for(int i = 0; i < 10000+argc; ++i)
+            speed1(dst, a, b, SZ);
+    }
+
+    setfl(a, SZ, 2+argc);
+    setfl(a, SZ, 3+argc);
+    {
+        Timer tm("Normal");
+        for(int i = 0; i < 10000+argc; ++i)
+            speed2(dst, a, b, SZ);
+    }
+
+    return dst[0] * argc;
+
+    //fgstd_test();
 
     puts("---");
 

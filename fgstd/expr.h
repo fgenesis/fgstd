@@ -19,7 +19,7 @@ public:
 };
 
 template<typename T, typename VT, typename ST>
-class ExprTraits2
+struct ExprTraits2
 {
 public:
     typedef T value_type;
@@ -43,14 +43,15 @@ public:
     typedef typename Tr::vec_type vec_type;
     typedef typename Tr::value_type value_type;
 
-    FGSTD_FORCE_INLINE ScalarExpr(const T& val) : _val(op::Load1<T>::apply(val)) {}
+    FGSTD_FORCE_INLINE ScalarExpr(const T& val) : _vec(op::Load1<T>::applyVec(&val)) {}
 
-    FGSTD_FORCE_INLINE const vec_type& operator[](size_type) const { return _val; }
+    FGSTD_FORCE_INLINE const value_type operator[](size_type) const { return op::Get1<T>::applyVec(_vec); }
+    FGSTD_FORCE_INLINE const vec_type& block(size_type)        const { return _vec; }
     FGSTD_FORCE_INLINE       size_type  size()                 const { return 1; }
-    FGSTD_FORCE_INLINE operator T const&() const { return _val; }
+    //FGSTD_FORCE_INLINE operator T const&() const { return _val; }
 
 private:
-    const vec_type _val;
+    const vec_type _vec;
 };
 
 template<typename T, u32 SZ>
@@ -68,13 +69,59 @@ public:
 
     typedef const T (&_arrayRef)[SZ];
 
-    FGSTD_FORCE_INLINE const value_type& operator[](size_type i) const { return op::Load<T>::apply(addressof(_arr[i])); }
-    FGSTD_FORCE_INLINE       size_type  size()                 const { return SZ; }
+    FGSTD_FORCE_INLINE const value_type& operator[](size_type i) const { return op::Load<T>::applyScalar(addressof(_arr[i])); }
+    FGSTD_FORCE_INLINE const vec_type block(size_type i)         const { return op::Load<T>::applyVec   (addressof(_arr[i])); }
+    FGSTD_FORCE_INLINE       size_type  size()                   const { return SZ; }
     // Must NOT be back-convertible to array! Otherwise it will do so when applying operator+
     //FGSTD_FORCE_INLINE operator _arrayRef () const { return _arr; }
 
 private:
     _arrayRef _arr;
+};
+
+template<typename T>
+class PointerExpr : public Expr<PointerExpr<T>, ExprTraits2<typename op::Traits<T>::value_type, typename op::Traits<T>::vec_type, u32> >
+{
+public:
+    typedef bool is_expr_source_tag;
+
+    typedef op::Traits<T> Tr;
+    typedef typename u32 size_type;
+    typedef typename Tr::vec_type vec_type;
+    typedef typename Tr::value_type value_type;
+
+    FGSTD_FORCE_INLINE PointerExpr(const T *p, u32 sz) : _ptr(p), _sz(sz) {}
+
+    FGSTD_FORCE_INLINE const value_type& operator[](size_type i) const { return op::Load<T>::applyScalar(addressof(_ptr[i])); }
+    FGSTD_FORCE_INLINE const vec_type block(size_type i)         const { return op::Load<T>::applyVec   (addressof(_ptr[i])); }
+    FGSTD_FORCE_INLINE       size_type  size()                   const { return _sz; }
+    // Must NOT be back-convertible to array! Otherwise it will do so when applying operator+
+    //FGSTD_FORCE_INLINE operator _arrayRef () const { return _arr; }
+
+private:
+    const T *_ptr;
+    const u32 _sz;
+};
+
+template<typename E>
+class LoadWrapExpr : public Expr<LoadWrapExpr<E>, ExprTraits2<typename op::Traits<typename E::value_type>::value_type, typename op::Traits<typename E::value_type>::vec_type, typename E::size_type> >
+{
+public:
+    typedef typename E::value_type T;
+    typedef op::Traits<T> Tr;
+    typedef typename E::size_type size_type;
+    typedef typename Tr::vec_type vec_type;
+    typedef typename Tr::value_type value_type;
+
+    FGSTD_FORCE_INLINE LoadWrapExpr(const E& e) : _e(e) {}
+
+    FGSTD_FORCE_INLINE const value_type& operator[](size_type i)  const { return op::Load<T>::applyScalar(addressof(_e[i])); }
+    FGSTD_FORCE_INLINE const vec_type block(size_type i)          const { return op::Load<T>::applyVec   (addressof(_e[i])); }
+    FGSTD_FORCE_INLINE       size_type  size()                    const { return _e.size(); }
+    //FGSTD_FORCE_INLINE operator const E& () const { return _e; }
+
+private:
+    const E& _e;
 };
 
 template<typename OP, typename E1, typename E2>
@@ -90,7 +137,8 @@ public:
     {}
 
     FGSTD_FORCE_INLINE size_type  size()                  const { return _a.size(); }
-    FGSTD_FORCE_INLINE vec_type operator[](size_type i) const { return OP::apply(_a[i], _b[i]); }
+    FGSTD_FORCE_INLINE value_type operator[](size_type i) const { return OP::applyScalar(_a[i], _b[i]); }
+    FGSTD_FORCE_INLINE vec_type block(size_type i)        const { return OP::applyVec(_a.block(i), _b.block(i)); }
 
 private:
     const E1 _a;
@@ -124,10 +172,12 @@ struct makeET<T, 1>
 template<typename T>
 struct makeET<T, 2>
 {
-    typedef typename T::Expr type;
+
+    typedef typename T::Expr subtype;
+    typedef typename LoadWrapExpr<subtype> type;
     FGSTD_FORCE_INLINE static type makeExpr(const T& e)
     {
-        return typename T::Expr(e);
+        return type(subtype(e));
     }
 };
 
@@ -182,7 +232,11 @@ FGSTD_FORCE_INLINE et::ArrayExpr<T, SZ> expr(const T (&arr)[SZ])
     return ArrayExpr<T, SZ>(arr);
 }
 
-
+template<typename T>
+FGSTD_FORCE_INLINE et::PointerExpr<T> expr(const T *ptr, u32 sz)
+{
+    return PointerExpr<T>(ptr, sz);
+}
 
 template<typename OP, typename E1, typename E2>
 struct BinOpOverload
@@ -201,20 +255,44 @@ struct BinOpOverload
     }
 };
 
-//using namespace et::scalar;
-
-template<typename DST, typename SRC>
-//fgstd::enable_if<fgstd::et::is_sink_expr<DST>::value, void>
-void store_array_pod(DST *dst, const SRC& src)
+/* FIXME
+template<typename E>
+struct expr_store_<E, false>
 {
-    //StoreExpr<DST*, SRC> store(dst, src);
-    typedef fgstd::op::Operators<typename SRC::value_type> Opr;
-    const SRC::size_type sz = src.size();
-    const SRC::size_type step = Opr::BLOCK_SIZE;
-    for(u32 i = 0; i < sz; i += step)
-        //store[i];
-        dst[i] = src[i];
-}
+    typedef typename E::size_type size_type;
+    typedef typename E::value_type T;
+
+    static void store(T* p, const E& e)
+    {
+        const size_type sz = e.size();
+        for(typename E::size_type i = 0; i < sz; ++i)
+            new (p + i) T(e[i]);
+    }
+};
+*/
+
+template<typename E>
+struct expr_store_<E, true>
+{
+    typedef typename E::value_type T;
+    typedef typename E::size_type size_type;
+    typedef fgstd::op::Operators<T> Opr;
+
+    static void store(T* dst, const E& src)
+    {
+        //StoreExpr<DST*, SRC> store(dst, src);
+        const size_type sz = src.size();
+        size_type i = 0;
+
+        // actual computation happens here, just before the store
+        if(Opr::BLOCK_SIZE > 1)
+            for(; i < sz; i += Opr::BLOCK_SIZE)
+                Opr::Vec::store(dst + i, src.block(i));
+        for(; i < sz; ++i)
+            Opr::Scalar::store(dst + i, src[i]);
+    }
+};
+
 
 } // end namespace et
 

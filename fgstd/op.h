@@ -2,70 +2,15 @@
 
 #include "platform.h"
 
+#include "op_def.h"
+#include "op_traits.h"
+
+#include "op_scalar.h"
+#include "op_sse.h"
+
+
 namespace fgstd {
 namespace op {
-
-/*
-#define _FGSTD_MAKE_BINOP(opr, cls) \
-struct cls \
-{ \
-    template<typename T> \
-    struct Op \
-    { \
-        typedef T value_type; \
-        template<typename A, typename B> \
-        static FGSTD_FORCE_INLINE T apply(const A& a, const B& b) \
-        { \
-            return a opr b; \
-        } \
-    }; \
-};
-
-_FGSTD_MAKE_BINOP(+, Add)
-_FGSTD_MAKE_BINOP(-, Sub)
-_FGSTD_MAKE_BINOP(*, Mul)
-_FGSTD_MAKE_BINOP(/, Div)
-_FGSTD_MAKE_BINOP(^, Xor)
-_FGSTD_MAKE_BINOP(%, Mod)
-_FGSTD_MAKE_BINOP(&, BitAnd)
-_FGSTD_MAKE_BINOP(|, BitOr)
-_FGSTD_MAKE_BINOP(<<, Lsh)
-_FGSTD_MAKE_BINOP(>>, Rsh)
-
-#undef _FGSTD_MAKE_BINOP
-*/
-
-template<typename T>
-struct Traits
-{
-    typedef T value_type;
-    typedef T vec_type;
-    enum { BLOCK_SIZE = 1 };
-};
-
-template<typename T>
-struct Operators
-{
-    typedef T value_type;
-    typedef T vec_type;
-    typedef Traits<T> Traits;
-    enum { BLOCK_SIZE = 1 };
-
-    FGSTD_FORCE_INLINE static vec_type load(const value_type *ptr)             { return *ptr; }
-    FGSTD_FORCE_INLINE static vec_type load1(const value_type& v)              { return v; }
-    FGSTD_FORCE_INLINE static vec_type store(value_type *ptr, const vec_type x){ return (*ptr = x); }
-    FGSTD_FORCE_INLINE static vec_type add(vec_type a, vec_type b)             { return a + b; }
-    FGSTD_FORCE_INLINE static vec_type sub(vec_type a, vec_type b)             { return a - b; }
-    FGSTD_FORCE_INLINE static vec_type mul(vec_type a, vec_type b)             { return a * b; }
-    FGSTD_FORCE_INLINE static vec_type div(vec_type a, vec_type b)             { return a / b; }
-    FGSTD_FORCE_INLINE static vec_type lsh(vec_type a, vec_type b)             { return a << b; }
-    FGSTD_FORCE_INLINE static vec_type rsh(vec_type a, vec_type b)             { return a >> b; }
-    FGSTD_FORCE_INLINE static vec_type bor(vec_type a, vec_type b)             { return a | b; }
-    FGSTD_FORCE_INLINE static vec_type band(vec_type a, vec_type b)            { return a & b; }
-    FGSTD_FORCE_INLINE static vec_type bxor(vec_type a, vec_type b)            { return a ^ b; }
-    FGSTD_FORCE_INLINE static vec_type min(vec_type a, vec_type b)             { return fgstd::vmin(a, b); }
-    FGSTD_FORCE_INLINE static vec_type max(vec_type a, vec_type b)             { return fgstd::vmax(a, b); }
-};
 
 template<typename T>
 struct Load
@@ -74,8 +19,10 @@ struct Load
     enum { BLOCK_SIZE = Traits::BLOCK_SIZE };
     typedef typename Traits::value_type value_type;
     typedef typename Traits::vec_type vec_type;
-    FGSTD_FORCE_INLINE static vec_type apply(const value_type *ptr)
-        { return Operators<T>::load(a); }
+    FGSTD_FORCE_INLINE static vec_type applyVec(const value_type *ptr)
+        { return Operators<T>::Vec::load(ptr); }
+    FGSTD_FORCE_INLINE static const value_type& applyScalar(const value_type *ptr)
+        { return Operators<T>::Scalar::load(ptr); }
 };
 
 template<typename T>
@@ -85,8 +32,23 @@ struct Load1
     enum { BLOCK_SIZE = Traits::BLOCK_SIZE };
     typedef typename Traits::value_type value_type;
     typedef typename Traits::vec_type vec_type;
-    FGSTD_FORCE_INLINE static vec_type apply(const value_type& v)
-        { return Operators<T>::load1(v); }
+    FGSTD_FORCE_INLINE static vec_type applyVec(const value_type *ptr)
+        { return Operators<T>::Vec::load1(ptr); }
+    FGSTD_FORCE_INLINE static const value_type& applyScalar(const value_type *ptr)
+        { return Operators<T>::Scalar::load1(ptr); }
+};
+
+template<typename T>
+struct Get1
+{
+    typedef Traits<T> Traits;
+    enum { BLOCK_SIZE = Traits::BLOCK_SIZE };
+    typedef typename Traits::value_type value_type;
+    typedef typename Traits::vec_type vec_type;
+    FGSTD_FORCE_INLINE static value_type applyVec(vec_type v)
+        { return Operators<T>::Vec::get1(v); }
+    FGSTD_FORCE_INLINE static const value_type& applyScalar(const value_type& v)
+        { return Operators<T>::Scalar::get1(v); }
 };
 
 template<typename T>
@@ -96,8 +58,10 @@ struct Store
     enum { BLOCK_SIZE = Traits::BLOCK_SIZE };
     typedef typename Traits::value_type value_type;
     typedef typename Traits::vec_type vec_type;
-    FGSTD_FORCE_INLINE static vec_type apply(const value_type *ptr, vec_type x)
-        { return Operators<T>::store(a); }
+    FGSTD_FORCE_INLINE static void applyVec(value_type *ptr, vec_type x)
+        { Operators<T>::Vec::store(ptr, x); }
+    FGSTD_FORCE_INLINE static void applyScalar(value_type *ptr, const value_type& x)
+        { Operators<T>::Scalar::store(ptr, x); }
 };
 
 #define _FGSTD_MAKE_OPR(cls, mth, _) \
@@ -109,8 +73,12 @@ struct Store
             enum { BLOCK_SIZE = Traits::BLOCK_SIZE }; \
             typedef typename Traits::value_type value_type; \
             typedef typename Traits::vec_type vec_type; \
-            FGSTD_FORCE_INLINE static vec_type apply(vec_type a, vec_type b) \
-                { return Operators<T>::mth(a, b); } \
+            enum { existsVec    = detail::has_##mth##<Operators<T>::Vec    >::value }; \
+            enum { existsScalar = detail::has_##mth##<Operators<T>::Scalar >::value }; \
+            FGSTD_FORCE_INLINE static typename enable_if<existsVec,    vec_type>::type applyVec(vec_type a, vec_type b) \
+                { return Operators<T>::Vec::mth(a, b); } \
+            FGSTD_FORCE_INLINE static typename enable_if<existsScalar, value_type>::type applyScalar(const value_type& a, const value_type& b) \
+                { return Operators<T>::Scalar::mth(a, b); } \
         }; \
     };
 #define _FGSTD_MAKE_FUNC(cls, mth) _FGSTD_MAKE_OPR(cls, mth, ?)

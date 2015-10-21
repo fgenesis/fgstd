@@ -348,7 +348,7 @@ vector<T>::vector(const E& e, IAllocator *a, typename E::is_expr_tag)
 {
     const u32 sz = e.size();
     _resize_noinit(sz);
-    et::expr_store(_arr, e); // FIXME
+    et::expr_store(_arr, e);
 }
 
 // ---- Expression template support ----
@@ -358,7 +358,7 @@ vector<T>::operator=(const E& e)
 {
     const u32 sz = e.size();
     _resize_noinit(sz);
-    et::expr_store(_arr, e); // FIXME
+    et::expr_store(_arr, e);
     return *this;
 }
 

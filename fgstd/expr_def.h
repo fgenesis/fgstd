@@ -1,6 +1,7 @@
 #pragma once
 
 #include "traits.h"
+#include "op_def.h"
 
 namespace fgstd {
 namespace et {
@@ -42,10 +43,11 @@ public:
     typedef bool is_expr_tag;
     typedef TRAITS traits;
     typedef typename TRAITS::value_type value_type;
-   // typedef typename default_vec_type<TRAITS>::type vec_type;
+    typedef typename default_vec_type<TRAITS>::type vec_type;
     typedef typename TRAITS::size_type size_type;
 
-    FGSTD_FORCE_INLINE const value_type& operator[](size_type i) const { return static_cast<E const&>(*this)[i]; }
+    FGSTD_FORCE_INLINE const value_type operator[](size_type i) const { return static_cast<E const&>(*this)[i]; }
+    FGSTD_FORCE_INLINE const vec_type block(size_type i)        const { return (static_cast<E const&>(*this)).block(i) }
     //FGSTD_FORCE_INLINE       value_type& operator[](size_type i)       { return static_cast<E      &>(*this)[i]; }
     FGSTD_FORCE_INLINE       size_type  size()                   const { return static_cast<E const&>(*this).size(); }
 
@@ -136,37 +138,25 @@ struct is_sink_expr
 */
 
 
-template<typename T, typename E, bool FAST>
+template<typename E, bool FAST>
 struct expr_store_;
+// rest is defined in expr.h
 
-template<typename T, typename E>
-struct expr_store_<T, E, false>
+template<typename E>
+struct expr_store2
 {
-    typedef typename E::size_type size_type;
-
-    static void store(T* p, const E& e)
+    FGSTD_FORCE_INLINE static void store(typename E::value_type *ptr, const E& src)
     {
-        const size_type sz = e.size();
-        for(typename E::size_type i = 0; i < sz; ++i)
-            new (p + i) T(e[i]);
+         // TODO: also check that there is really an acceleration for the type
+         expr_store_<E, fgstd::is_pod<typename E::value_type>::value>::store(ptr, src);
     }
 };
 
 template<typename T, typename E>
-struct expr_store_<T, E, true>
+typename enable_if<is_usable_expr<E>::value && is_same<typename E::value_type, T>::value, void>::type
+expr_store(T *ptr, const E& e)
 {
-    static void store(T* p, const E& e)
-    {
-        et::store_array_pod(p, e);
-    }
-};
-
-template<typename T, typename E>
-//typename fgstd::enable_if<is_sink_expr<E>::value, void>::type
-void expr_store(T *ptr, const E& e)
-{
-    // todo: add check for fast conversion expression, eg. int<->float
-    expr_store_<T, E, fgstd::is_pod<T>::value && is_same<T, typename E::value_type>::value>::store(ptr, e);
+    expr_store2<E>::store(ptr, e);
 }
 
 
