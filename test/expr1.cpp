@@ -94,30 +94,26 @@ __declspec(align(32)) struct alntest
 
 extern void fgstd_test();
 
+
 int main()
 {
     fgstd::VAllocator<GlobalDefaultAlloc> defaultAlloc;
     fgstd::g_defaultAlloc = &defaultAlloc;
 
-    fgstd_test();
+    //fgstd_test();
 
-    /*{
+    {
+        //using namespace fgstd;
 
 
-        int a[] = {1,2,3,4,5};
-        fgstd::vector<int> v(a);
-        fgstd::vector<int> c = v; //(v + v + 1) + (v * 100);
-
+        float a[] = {1,2,3,4,5};
+        fgstd::vector<float> v(a);
+        fgstd::vector<float> c = v + 100.0f; // v + 100; //(v + v + 1) + (v * 100);
         for(u32 i = 0; i < c.size(); ++i)
-            printf("[%u] = %u\n", i, c[i]);
-
-        printf("%u -> %u\n", 24, fgstd::nextPowerOf2(24));
-        printf("%u -> %u\n", 0, fgstd::nextPowerOf2(0));
-        printf("%u -> %u\n", 1, fgstd::nextPowerOf2(1));
-        printf("%u -> %u\n", 8, fgstd::nextPowerOf2(8));
+            printf("[%u] = %f\n", i, c[i]);
     }
 
-    puts("---");*/
+    puts("---");
 
     /*{
         fgstd::vector<fgstd::vector<u32> > vv(1);
@@ -155,6 +151,7 @@ int main()
     printf("[5]: %u\n", hi[5]);
     */
 
+    /*
     typedef FGSTD_TYPELIST((u32, f32)) tl;
     typedef fgstd::multivector<tl> mvt;
     mvt mv;
@@ -167,7 +164,7 @@ int main()
     vf[0] = 0.5f;
     vu[2] = 0x98765432;
     vf[2] = 3.141596f;
-
+    */
 
     return 0;
 }

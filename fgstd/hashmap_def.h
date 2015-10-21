@@ -19,7 +19,7 @@ template<typename K> struct hash_cast
 class IAllocator;
 extern IAllocator *g_defaultAlloc;
 
-template<typename K, typename V, typename HASH = hash_cast<K>, typename EQ = equal<K> >
+template<typename K, typename V, typename HASH = fgstd::hash_cast<K>, typename EQ = fgstd::equal<K> >
 class hashmap
 {
 public:

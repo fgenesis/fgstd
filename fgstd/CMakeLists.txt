@@ -1,5 +1,7 @@
 set(fgstd_src_h
 _algo/timsort.h
+_op_builder.h
+_typelist_builder.h
 dummy.cpp
 algo.h
 allocator.h
@@ -19,7 +21,6 @@ multivector_impl.h
 op.h
 platform.h
 pointer.h
-scalar.h
 sort.h
 splaymap_def.h
 traits.h

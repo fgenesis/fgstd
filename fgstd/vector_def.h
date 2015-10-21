@@ -25,7 +25,7 @@ public:
     vector(T (&arr)[SZ], IAllocator *a = g_defaultAlloc);
 
     template<typename E>
-    vector(const et::Expr<E>& e, IAllocator *a = g_defaultAlloc);
+    vector(const E& e, IAllocator *a = g_defaultAlloc, typename E::is_expr_tag = false);
 
     vector(const vector<T>& v);
 #ifdef FGSTD_USE_CPP11
@@ -69,7 +69,8 @@ public:
     vector<T>& operator=(const vector<T>& v);
 #endif
     template<typename E>
-    vector<T>& operator=(const et::Expr<E>& e);
+    typename enable_if<et::is_usable_expr<E>::value, vector<T>&>::type
+        operator=(const E& e);
 
 
     IAllocator *get_alloc();
@@ -118,6 +119,8 @@ public:
     class Expr : public et::Expr<vector<T> >
     {
     public:
+        typedef bool is_expr_source_tag;
+
         typedef vector<T> container_type;
         typedef T value_type;
         typedef typename container_type::size_type size_type;

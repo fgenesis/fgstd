@@ -42,12 +42,12 @@ public:
     sema() : state(ALIVE) {}
     ~sema() { assert(state != DELETED); state = DELETED; }
     sema(const sema& o) { assert(o.state != DELETED); state = o.state; }
-    sema& operator=(const sema& o) { if(this == &o) return *this; assert(state != STATE_DELETED); assert(o.state != DELETED); state = o.state; return *this; }
-    void swap(sema& o) { assert(o.state != STATE_DELETED); assert(state != STATE_DELETED); fgstd::swap(state, o.state); }
+    sema& operator=(const sema& o) { if(this == &o) return *this; assert(state != DELETED); assert(o.state != DELETED); state = o.state; return *this; }
+    void swap(sema& o) { assert(o.state != DELETED); assert(state != DELETED); fgstd::swap(state, o.state); }
 
 #ifdef FGSTD_USE_CPP11
-    sema(sema&& o) { assert(state != STATE_DELETED); state = o.state; o.state = EMPTY; }
-    sema& operator=(sema&& o) { assert(o.state != STATE_DELETED); assert(state != STATE_DELETED); state = o.state; o.state = EMPTY; return *this; }
+    sema(sema&& o) { assert(state != DELETED); state = o.state; o.state = EMPTY; }
+    sema& operator=(sema&& o) { assert(o.state != DELETED); assert(state != DELETED); state = o.state; o.state = EMPTY; return *this; }
 #endif
 
     State state;

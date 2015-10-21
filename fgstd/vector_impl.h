@@ -79,22 +79,6 @@ vector<T>::vector(vector<T>&& v)
 }
 #endif
 
-template<typename T> template<typename E>
-vector<T>::vector(const et::Expr<E>& e, IAllocator *a)
-: _arr(NULL), _sz(0), _capacity(0), _alloc(a)
-{
-    if(const u32 sz = e.size())
-    {
-        _resize_noinit(sz);
-        if(is_pod<T>::value)
-            for(u32 i = 0; i < sz; ++i)
-                _arr[i] = e[i];
-        else
-            for(u32 i = 0; i < sz; ++i)
-                new (&_arr[i]) T(e[i]);
-    }
-}
-
 template<typename T>
 vector<T>::~vector()
 {
@@ -337,21 +321,6 @@ FGSTD_FORCE_INLINE vector<T>&  vector<T>::operator=(const vector<T> &v)
 }
 #endif
 
-template<typename T> template<typename E>
-FGSTD_FORCE_INLINE vector<T>&
-vector<T>::operator=(const et::Expr<E>& e)
-{
-    const u32 sz = e.size();
-    _resize_noinit(sz);
-    if(is_pod<T>::value)
-        for(u32 i = 0; i < sz; ++i)
-            _arr[i] = e[i];
-    else
-        for(u32 i = 0; i < sz; ++i)
-            new (&_arr[i]) T(e[i]);
-    return *this;
-}
-
 template<typename T>
 FGSTD_FORCE_INLINE void vector<T>::swap(vector<T> &v)
 {
@@ -372,6 +341,29 @@ FGSTD_FORCE_INLINE T& vector<T>::back()
 {
     return _arr[_sz - 1];
 }
+
+template<typename T> template<typename E>
+vector<T>::vector(const E& e, IAllocator *a, typename E::is_expr_tag)
+: _arr(NULL), _sz(0), _capacity(0), _alloc(a)
+{
+    const u32 sz = e.size();
+    _resize_noinit(sz);
+    et::expr_store(_arr, e); // FIXME
+}
+
+// ---- Expression template support ----
+template<typename T> template<typename E>
+FGSTD_FORCE_INLINE typename enable_if<et::is_usable_expr<E>::value, vector<T>&>::type
+vector<T>::operator=(const E& e)
+{
+    const u32 sz = e.size();
+    _resize_noinit(sz);
+    et::expr_store(_arr, e); // FIXME
+    return *this;
+}
+
+
+// -------------------------------------
 
 
 

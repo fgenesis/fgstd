@@ -2,6 +2,10 @@
 
 #include <stdlib.h>
 
+#define _FGSTD_CONCAT2(a, b) a##b
+#define _FGSTD_CONCAT(a, b) _FGSTD_CONCAT2(a, b)
+
+
 #if defined(_MSC_VER)
 # define FGSTD_ALIGN(N) __declspec(align(N))
 # include <malloc.h>

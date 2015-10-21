@@ -89,6 +89,9 @@ template<bool B, typename T> struct get_value_type {};
 template<typename T> struct get_value_type<true, T> { typedef typename T::value_type type; };
 template<typename T> struct get_value_type<false, T> { typedef T type; };
 
+template <typename T, size_t N>
+char (&_ArraySizeHelper( T (&a)[N]))[N];
+
 
 } // -----------------
 
@@ -132,8 +135,8 @@ template <typename T> struct is_scalar : priv::is_scalar<typename remove_cv<T>::
 template <typename T> struct is_lvalue_reference : priv::is_lvalue_reference<typename remove_cv<T>::type> {};
 template <typename T> struct is_rvalue_reference : priv::is_rvalue_reference<typename remove_cv<T>::type> {};
 
-template <typename T>
-struct get_value_type
+/*template <typename T>
+struct get_value_type_ex
 {
     typedef typename remove_cv<T>::type _B;
     enum { hasvt = priv::has_value_type<_B>::value };
@@ -144,6 +147,13 @@ struct get_value_type
             typename remove_pointer<_B>::type
         >::type
     >::type type;
+};*/
+
+template<typename T>
+struct get_value_type
+{
+    enum { hasvt = priv::has_value_type<T>::value };
+    typedef typename priv::get_value_type<hasvt, T>::type type;
 };
 
 
@@ -240,6 +250,8 @@ template<typename T> struct is_pod : priv::CompileCheck<
     >::value
 > {};
 
+
+#define fgstd_countof(a) (sizeof(fgstd::priv::_ArraySizeHelper(a)))
 
 
 }
