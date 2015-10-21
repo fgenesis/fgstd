@@ -162,5 +162,7 @@ void fgstd_test()
 
     }
 
+    fgstd_static_assert((fgstd::detail::has_swap_method<fgstd::vector<int> >::value));
+
 }
 

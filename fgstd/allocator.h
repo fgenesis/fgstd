@@ -75,7 +75,7 @@ class ObjectAllocator : protected A
 private:
     void *_Alloc()
     {
-        return this->Alloc(AlignedSize<T>::value);
+        return this->Alloc(sizeof(T));
     }
 };
 

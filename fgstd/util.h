@@ -19,14 +19,14 @@ typename remove_ref<T>::type&& move (T&& x) FGSTD_NOEXCEPT
 namespace detail
 {
 
-template<typename A, typename B>
+template<typename A>
 struct has_swap_method
 {
     typedef char yes[1];
     typedef char no[2];
-    template<typename A, void (A::*)(B&) const> struct SFINAE {};
-    template<typename A> static yes& Test(SFINAE<A, &A::swap>*);
-    template<typename A> static no& Test(...);
+    template<typename T, void (T::*)(T&)> struct SFINAE {};
+    template<typename T> static yes& Test(SFINAE<T, &T::swap>*);
+    template<typename T> static no&  Test(...);
     enum { value = sizeof(Test<A>(0)) == sizeof(yes) };
 };
 
@@ -62,7 +62,7 @@ struct swapper<false>
 template<typename T>
 FGSTD_FORCE_INLINE void swap(T& a, T& b)
 {
-    detail::swapper<!!detail::has_swap_method<T, T>::value>::swap(a, b);
+    detail::swapper<!!detail::has_swap_method<T>::value>::swap(a, b);
 }
 
 template<typename T>
