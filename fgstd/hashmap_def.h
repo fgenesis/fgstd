@@ -64,7 +64,7 @@ public:
     u32 size() const;
     bool empty() const;
     void clear();
-    void deallocate();
+    void dealloc();
 
     const storage_type& values() const;
 

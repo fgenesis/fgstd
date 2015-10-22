@@ -63,7 +63,7 @@ hashmap<K, V, HASH, EQ>::hashmap(IAllocator *a, const HASH& h, const EQ& eq)
 
 template<typename K, typename V, typename HASH, typename EQ>
 hashmap<K, V, HASH, EQ>::hashmap(const hashmap& o)
-    : _keys(o._keys), _whichbucket(o._whichbucket) _values(o._values), _loadFactor(o._loadFactor), _initialBuckets(o._initialBuckets), _hash(o._hash), _eq(o._eq)
+    : _keys(o._keys), _whichbucket(o._whichbucket), _values(o._values), _loadFactor(o._loadFactor), _initialBuckets(o._initialBuckets), _hash(o._hash), _eq(o._eq)
 {
 }
 
@@ -97,7 +97,7 @@ hashmap<K, V, HASH, EQ>& hashmap<K, V, HASH, EQ>::operator=(hashmap<K, V, HASH, 
 template<typename K, typename V, typename HASH, typename EQ>
 hashmap<K, V, HASH, EQ>& hashmap<K, V, HASH, EQ>::operator=(const hashmap<K, V, HASH, EQ>& o)
 {
-    if (&v != this)
+    if (&o != this)
     {
         clear();
         _keys = o._keys;
@@ -127,7 +127,7 @@ void hashmap<K, V, HASH, EQ>::swap(hashmap<K, V, HASH, EQ>& o)
 template<typename K, typename V, typename HASH, typename EQ>
 FGSTD_FORCE_INLINE u32 hashmap<K, V, HASH, EQ>::size() const
 {
-    return _size;
+    return _values.size();
 }
 
 template<typename K, typename V, typename HASH, typename EQ>
@@ -363,11 +363,11 @@ void hashmap<K, V, HASH, EQ>::clear()
 }
 
 template<typename K, typename V, typename HASH, typename EQ>
-void hashmap<K, V, HASH, EQ>::deallocate()
+void hashmap<K, V, HASH, EQ>::dealloc()
 {
-    _keys.deallocate();
-    _whichbucket.deallocate();
-    _values.deallocate();
+    _keys.dealloc();
+    _whichbucket.dealloc();
+    _values.dealloc();
 }
 
 template<typename K, typename V, typename HASH, typename EQ>

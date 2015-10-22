@@ -24,25 +24,25 @@ struct gap_end_expand<A, B, E, false>
     enum { value = E-1 };
 };
 
+template<typename A, typename B, int End> 
+struct _GapEnd
+{
+    A a;
+    B b;
+    char e[End];
+};
+template<typename A, typename B>
+struct _GapEnd<A, B, 0>
+{
+    A a;
+    B b;
+};
+
 template<typename A, typename B, int E>
 struct gap_end_expand<A, B, E, true>
 {
-    template<int End> 
-    struct _Gap
-    {
-        A a;
-        B b;
-        char e[End];
-    };
-    template<>
-    struct _Gap<0>
-    {
-        A a;
-        B b;
-    };
-
-    typedef _Gap<E> Gap1;
-    typedef _Gap<E+1> Gap2;
+    typedef _GapEnd<A, B, E> Gap1;
+    typedef _GapEnd<A, B, E+1> Gap2;
     enum
     {
         same = sizeof(Gap1) == sizeof(Gap2),
@@ -69,25 +69,25 @@ struct gap_between_expand<A, B, N, false>
     enum { value = N-1 };
 };
 
+template<typename A, typename B, int Mid> 
+struct _GapBetween
+{
+    A a;
+    char n[Mid];
+    B b;
+};
+template<typename A, typename B>
+struct _GapBetween<A, B, 0>
+{
+    A a;
+    B b;
+};
+
 template<typename A, typename B, int N>
 struct gap_between_expand<A, B, N, true>
 {
-    template<int Mid> 
-    struct _Gap
-    {
-        A a;
-        char n[Mid];
-        B b;
-    };
-    template<>
-    struct _Gap<0>
-    {
-        A a;
-        B b;
-    };
-
-    typedef _Gap<N> Gap1;
-    typedef _Gap<N+1> Gap2;
+    typedef _GapBetween<A, B, N> Gap1;
+    typedef _GapBetween<A, B, N+1> Gap2;
 
     enum
     {
@@ -140,11 +140,11 @@ struct _array_offs_bytes_helper1
 {
     static FGSTD_FORCE_INLINE size_t calc(size_t n)
     {
-        return _array_offs_bytes_helper<N, TL::Head, TL::Tail>::calc(n);
+        return _array_offs_bytes_helper<N, typename TL::Head, typename TL::Tail>::calc(n);
     }
     static FGSTD_FORCE_INLINE void writeOffs(size_t n, u32 *out, u32 start)
     {
-        _array_offs_bytes_helper<N, TL::Head, TL::Tail>::writeOffs(n, out, start);
+        _array_offs_bytes_helper<N, typename TL::Head, typename TL::Tail>::writeOffs(n, out, start);
     }
 };
 
@@ -242,7 +242,7 @@ public:
     struct offset
     {
         typedef typename Tail::Head Next;
-        typedef typename Tail::template offset<N-1> NextOffset;
+        typedef typename Tail::offset<N-1> NextOffset;
         enum
         {
             value = sizeof(Head) + gap_between<Head, Next>::value + NextOffset::value

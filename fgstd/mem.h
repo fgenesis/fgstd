@@ -118,7 +118,7 @@ template<typename T>
 void mem_fill(T *dst, u32 n, const T& obj)
 {
     if(is_pod<T>::value)
-        priv::mem_set_helper<T, sizeof(T) == 1 && is_integral<T>::value>::doit(p, n, obj);
+        priv::mem_set_helper<T, sizeof(T) == 1 && is_integral<T>::value>::doit(dst, n, obj);
     else
         for(u32 i = 0; i < n; ++i)
             dst[i] = obj;

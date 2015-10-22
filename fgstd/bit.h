@@ -6,29 +6,34 @@
 namespace fgstd {
 namespace detail {
 
+template<typename T, u32 sh>
+struct shifthelper
+{
+    static const T tsh = sh;
+    FGSTD_FORCE_INLINE static T next(T v)
+    {
+        v = shifthelper<T, sh / 2>::next(v);
+        v |= v >> tsh;
+        return v;
+    }
+};
+
+template<typename T>
+struct shifthelper<T, 0u>
+{
+    FGSTD_FORCE_INLINE static T next(T v)
+    {
+        return v;
+    }
+};
+
 template<typename T> 
 struct pow2builder
 {
-    template<u32 sh>
-    struct shift
+    FGSTD_FORCE_INLINE static T next(T v)
     {
-        static const T tsh = sh;
-        FGSTD_FORCE_INLINE static T next(T v)
-        {
-            v = shift<sh / 2>::next(v);
-            v |= v >> tsh;
-            return v;
-        }
-    };
-
-    template<>
-    struct shift<0u>
-    {
-        FGSTD_FORCE_INLINE static T next(T v)
-        {
-            return v;
-        }
-    };
+        return shifthelper<T, sizeof(T) * 4>::next(v);
+    }
 };
 
 
@@ -42,7 +47,7 @@ typename enable_if<
 FGSTD_FORCE_INLINE nextPowerOf2(T v)
 {
     v--;
-    v = detail::pow2builder<T>::shift<T(sizeof(T) * 4)>::next(v);
+    v = detail::pow2builder<T>::next(v);
     v++;
     v += !v;
     return v;
