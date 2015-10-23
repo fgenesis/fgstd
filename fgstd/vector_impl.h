@@ -158,7 +158,7 @@ template<typename T>
 FGSTD_FORCE_INLINE void vector<T>::pop_back()
 {
     if(is_pod<T>::value)
-        _arr[--_sz];
+        --_sz;
     else
         _arr[--_sz].~T();
 }

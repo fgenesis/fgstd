@@ -171,43 +171,45 @@ void multivector<TL>::dealloc()
     _capacity = 0;
 }
 
+/*
 template<typename TL> template<unsigned N>
-FGSTD_FORCE_INLINE const typename multivector<TL>::view<N>
-multivector<TL>::getview() const
+FGSTD_FORCE_INLINE typename multivector<TL>::template cview<N>
+multivector<TL>::getcview() const
 {
-    return view<N>(*this);
+    return cview<N>(*this);
 }
 
 template<typename TL> template<unsigned N>
-FGSTD_FORCE_INLINE typename multivector<TL>::view<N>
+FGSTD_FORCE_INLINE typename multivector<TL>::template view<N>
 multivector<TL>::getview()
 {
     return view<N>(*this);
 }
+*/
 
 template<typename TL> template<unsigned N>
-FGSTD_FORCE_INLINE const typename multivector<TL>::gettype<N>::type&
+FGSTD_FORCE_INLINE const typename multivector<TL>::template gettype<N>::type&
 multivector<TL>::at(u32 i) const
 {
     return _ptr<N>()[i];
 }
 
 template<typename TL> template<unsigned N>
-FGSTD_FORCE_INLINE typename multivector<TL>::gettype<N>::type&
+FGSTD_FORCE_INLINE typename multivector<TL>::template gettype<N>::type&
 multivector<TL>::at(u32 i)
 {
     return _ptr<N>()[i];
 }
 
 template<typename TL> template<unsigned N>
-FGSTD_FORCE_INLINE const typename multivector<TL>::gettype<N>::type *
+FGSTD_FORCE_INLINE const typename multivector<TL>::template gettype<N>::type *
 multivector<TL>::data() const
 {
     return _ptr<N>();
 }
 
 template<typename TL> template<unsigned N>
-FGSTD_FORCE_INLINE typename multivector<TL>::gettype<N>::type *
+FGSTD_FORCE_INLINE typename multivector<TL>::template gettype<N>::type *
 multivector<TL>::data()
 {
     return _ptr<N>();

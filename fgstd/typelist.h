@@ -190,7 +190,53 @@ struct _array_offs_bytes_helper<0, HEAD, TAIL>
     }
 };
 
+// pre-decl
+template<typename HEAD, typename TAIL>
+class typelist;
 
+
+template<typename HEAD, typename TAIL, unsigned N>
+struct _typelist_get
+{
+    typedef typename _typelist_get<typename TAIL::Head, typename TAIL::Tail, N-1>::type type;
+};
+
+template<typename HEAD, typename TAIL>
+struct _typelist_get<HEAD, TAIL, 0u>
+{
+    typedef HEAD type;
+};
+
+/*
+template<typename HEAD, typename TAIL, unsigned N>
+struct _typelist_first_as_list
+{
+    typedef typelist<HEAD, typename _typelist_first_as_list<TAIL::Head, TAIL::Tail, N-1>::type> type;
+};
+
+template<typename HEAD, typename TAIL>
+struct _typelist_first_as_list<HEAD, TAIL, 0u>
+{
+    typedef typelist_end type;
+};
+*/
+
+template<typename HEAD, typename TAIL, unsigned N>
+struct _typelist_offset
+{
+    typedef typename TAIL::Head Next;
+    typedef _typelist_offset<Next, typename TAIL::Tail, N-1> NextOffset;
+    enum
+    {
+        value = sizeof(HEAD) + gap_between<HEAD, Next>::value + NextOffset::value
+    };
+};
+
+template<typename HEAD, typename TAIL>
+struct _typelist_offset<HEAD, TAIL, 0u>
+{
+    enum { value = 0 };
+};
 
 
 template<typename HEAD, typename TAIL = typelist_end>
@@ -201,28 +247,17 @@ public:
     typedef TAIL Tail;
 
     template<unsigned N>
-    struct get
+    struct offset
     {
-        typedef typename Tail::template get<N-1>::type type;
-    };
-
-    template<>
-    struct get<0>
-    {
-        typedef Head type;
+        enum { value = _typelist_offset<HEAD, TAIL, N>::value };
     };
 
     template<unsigned N>
-    struct first_as_list
+    struct get
     {
-        typedef typelist<Head, typename Tail::template first_as_list<N-1>::type> type;
+        typedef typename  _typelist_get<HEAD, TAIL, N>::type type;
     };
 
-    template<>
-    struct first_as_list<0>
-    {
-        typedef typelist_end type;
-    };
 
     enum
     {
@@ -238,22 +273,6 @@ public:
         typename Tail::maxalign_type
     >::type maxalign_type;
 
-    template<unsigned N>
-    struct offset
-    {
-        typedef typename Tail::Head Next;
-        typedef typename Tail::offset<N-1> NextOffset;
-        enum
-        {
-            value = sizeof(Head) + gap_between<Head, Next>::value + NextOffset::value
-        };
-    };
-
-    template<>
-    struct offset<0>
-    {
-        enum { value = 0 };
-    };
 
     enum
     {
@@ -305,7 +324,7 @@ private:
     Filler filler;
 
     // forbid instantiation
-    typelist();
+    //typelist();
 
 
 };
@@ -423,7 +442,8 @@ struct typelist_cons<void (*)(T1)>
 
 #define FGSTD_TYPELIST(x) fgstd::typelist_cons<void(*) x>::type
 
-}
+} // end namespace priv
+
 
 using priv::typelist;
 using priv::typelist_cons;

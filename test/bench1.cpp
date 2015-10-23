@@ -164,6 +164,7 @@ int main()
                 {
                     assert(!(i & 1));
                     volatile u32 x = *p;
+                    (void)x;
                     assert(x == (i / 2) * 123);
                 }
                 else
@@ -193,6 +194,7 @@ int main()
                 {
                     assert(!(i & 1));
                     volatile u32 x = it->second;
+                    (void)x;
                     assert(x == (i / 2) * 123);
                 }
                 else

@@ -19,7 +19,6 @@ multivector_def.h
 multivector_impl.h
 op_def.h
 op.h
-op_traits.h
 op_scalar.h
 op_sse.h
 platform.h

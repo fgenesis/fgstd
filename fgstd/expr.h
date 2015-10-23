@@ -39,7 +39,7 @@ class ScalarExpr : public Expr<ScalarExpr<T>,  ExprTraits2<typename op::Traits<T
 {
 public:
     typedef op::Traits<T> Tr;
-    typedef typename u32 size_type;
+    typedef u32 size_type;
     typedef typename Tr::vec_type vec_type;
     typedef typename Tr::value_type value_type;
 
@@ -61,7 +61,7 @@ public:
     typedef bool is_expr_source_tag;
 
     typedef op::Traits<T> Tr;
-    typedef typename u32 size_type;
+    typedef u32 size_type;
     typedef typename Tr::vec_type vec_type;
     typedef typename Tr::value_type value_type;
 
@@ -86,7 +86,7 @@ public:
     typedef bool is_expr_source_tag;
 
     typedef op::Traits<T> Tr;
-    typedef typename u32 size_type;
+    typedef u32 size_type;
     typedef typename Tr::vec_type vec_type;
     typedef typename Tr::value_type value_type;
 
@@ -174,7 +174,7 @@ struct makeET<T, 2>
 {
 
     typedef typename T::Expr subtype;
-    typedef typename LoadWrapExpr<subtype> type;
+    typedef LoadWrapExpr<subtype> type;
     FGSTD_FORCE_INLINE static type makeExpr(const T& e)
     {
         return type(subtype(e));

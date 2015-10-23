@@ -168,24 +168,6 @@ __declspec(align(32)) struct alntest
 extern void fgstd_test();
 
 
-struct ensure_float_op_test
-{
-    typedef fgstd::op::Operators<float> Op;
-    typedef fgstd::op::detail::has_add<Op::Vec> chk;
-    typedef chk::VT VT;
-    enum { val = chk::value };
-    //typedef chk::SFINAE<Op, Op::Vec::add> xx;
-    //static_assert(val, "no add");
-
-    typedef Op::vec_type VT;
-
-    typedef fgstd::et::ScalarExpr<float> SE;
-    typedef fgstd::et::ArrayExpr<float, 8> AE;
-
-    typedef fgstd::et::BinOpExpr<fgstd::op::Add, AE, SE> ADD;
-
-};
-
 void setfl(float *p, u32 sz, float v)
 {
     fgstd::et::expr_store(p, fgstd::expr(v));
@@ -203,7 +185,7 @@ void speed2(float *dst, float *a, float *b, u32 sz)
 }
 
 
-int main(int argc)
+int main(int argc, char **argv)
 {
     fgstd::VAllocator<GlobalDefaultAlloc> defaultAlloc;
     fgstd::g_defaultAlloc = &defaultAlloc;
@@ -213,7 +195,7 @@ int main(int argc)
         FGSTD_ALIGN(16) float a[] = {1,2,3,4,5,6,7,8};
         fgstd::vector<float> v(a);
         fgstd::vector<float> c(fgstd_countof(a));
-        c = fgstd::expr(a) * 10.0f + 100.0f; // v + 100; //(v + v + 1) + (v * 100);
+        c = (fgstd::expr(a) * 10.0f + 100.0f); // v + 100; //(v + v + 1) + (v * 100);
         for(u32 i = 0; i < c.size(); ++i)
             printf("[%u] = %f\n", i, c[i]);
     }

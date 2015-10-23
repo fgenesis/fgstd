@@ -3,7 +3,6 @@
 #include "platform.h"
 
 #include "op_def.h"
-#include "op_traits.h"
 
 #include "op_scalar.h"
 #include "op_sse.h"
@@ -73,11 +72,9 @@ struct Store
             enum { BLOCK_SIZE = Traits::BLOCK_SIZE }; \
             typedef typename Traits::value_type value_type; \
             typedef typename Traits::vec_type vec_type; \
-            enum { existsVec    = detail::has_##mth##<Operators<T>::Vec    >::value }; \
-            enum { existsScalar = detail::has_##mth##<Operators<T>::Scalar >::value }; \
-            FGSTD_FORCE_INLINE static typename enable_if<existsVec,    vec_type>::type applyVec(vec_type a, vec_type b) \
+            FGSTD_FORCE_INLINE static vec_type applyVec(vec_type a, vec_type b) \
                 { return Operators<T>::Vec::mth(a, b); } \
-            FGSTD_FORCE_INLINE static typename enable_if<existsScalar, value_type>::type applyScalar(const value_type& a, const value_type& b) \
+            FGSTD_FORCE_INLINE static value_type applyScalar(const value_type& a, const value_type& b) \
                 { return Operators<T>::Scalar::mth(a, b); } \
         }; \
     };

@@ -244,7 +244,6 @@ V& hashmap<K, V, HASH, EQ>::_insert_hash(const u32 h, const K& key, const V& val
     const u32 hh = h & (_keys.size() - 1);
     bucket& b = _keys[hh];
 
-    const u32 bsz = b.keys.size();
     b.hashes.push_back(h);
     b.keys.push_back(key);
     b.idxs.push_back(idx);

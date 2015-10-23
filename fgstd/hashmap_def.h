@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "types.h"
 #include "vector_def.h"
+#include "util.h"
 
 
 namespace fgstd {

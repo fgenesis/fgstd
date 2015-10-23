@@ -4,8 +4,9 @@
 #endif
 
 #ifndef _FGSTD_MAKE_FUNC
-#define _FGSTD_MAKE_FUNC undefined
+#error _FGSTD_MAKE_FUNC undefined
 #endif
+
 
 _FGSTD_MAKE_OPR(Add, add, +)
 _FGSTD_MAKE_OPR(Sub, sub, -)

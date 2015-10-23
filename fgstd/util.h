@@ -9,7 +9,7 @@ namespace fgstd {
 template <class T>
 typename remove_ref<T>::type&& move (T&& x) FGSTD_NOEXCEPT
 {
-    return static_cast<remove_ref<T>::type&&>(x);
+    return static_cast<typename remove_ref<T>::type &&>(x);
 }
 #define FGSTD_MOVE(x) fgstd::move(x)
 #else
@@ -97,15 +97,15 @@ FGSTD_FORCE_INLINE T *addressof(T& x) FGSTD_NOEXCEPT
 
 #ifdef FGSTD_USE_CPP11
 template<typename T>
-FGSTD_FORCE_INLINE T&& forward(const T& x) FGSTD_NOEXCEPT
+FGSTD_FORCE_INLINE const T&& forward(const T& x) FGSTD_NOEXCEPT
 {
-    return static_cast<remove_ref<T>::type>(x);
+    return static_cast<const typename remove_ref<T>::type&&>(x);
 }
 
 template<typename T>
 FGSTD_FORCE_INLINE T&& forward(T&& x) FGSTD_NOEXCEPT
 {
-    return static_cast<remove_ref<T>::type>(x);
+    return static_cast<typename remove_ref<T>::type&&>(x);
 }
 
 template<class T>

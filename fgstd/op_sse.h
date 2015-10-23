@@ -29,11 +29,6 @@ public:
     FGSTD_FORCE_INLINE static vec_type sub(vec_type a, vec_type b)             { return _mm_sub_ps(a, b); }
     FGSTD_FORCE_INLINE static vec_type mul(vec_type a, vec_type b)             { return _mm_mul_ps(a, b); }
     FGSTD_FORCE_INLINE static vec_type div(vec_type a, vec_type b)             { return _mm_div_ps(a, b); }
-    //FGSTD_FORCE_INLINE static vec_type lsh(vec_type a, vec_type b)             { return _mm_d_ps(a, b); }
-    //FGSTD_FORCE_INLINE static vec_type rsh(vec_type a, vec_type b)             { return _mm_add_ps(a, b); }
-    FGSTD_FORCE_INLINE static vec_type bor(vec_type a, vec_type b)             { return _mm_add_ps(a, b); }
-    FGSTD_FORCE_INLINE static vec_type band(vec_type a, vec_type b)            { return _mm_add_ps(a, b); }
-    FGSTD_FORCE_INLINE static vec_type bxor(vec_type a, vec_type b)            { return _mm_add_ps(a, b); }
     FGSTD_FORCE_INLINE static vec_type min(vec_type a, vec_type b)             { return _mm_min_ps(a, b); }
     FGSTD_FORCE_INLINE static vec_type max(vec_type a, vec_type b)             { return _mm_max_ps(a, b); }
 };

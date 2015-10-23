@@ -15,13 +15,15 @@ struct ScalarOperators
     FGSTD_FORCE_INLINE static T sub(const T& a, const T& b)             { return a - b; }
     FGSTD_FORCE_INLINE static T mul(const T& a, const T& b)             { return a * b; }
     FGSTD_FORCE_INLINE static T div(const T& a, const T& b)             { return a / b; }
+
+    FGSTD_FORCE_INLINE static const T& min(const T& a, const T& b)      { return a < b ? a : b; }
+    FGSTD_FORCE_INLINE static const T& max(const T& a, const T& b)      { return a < b ? b : a; }
+
     FGSTD_FORCE_INLINE static T lsh(const T& a, const T& b)             { return a << b; }
     FGSTD_FORCE_INLINE static T rsh(const T& a, const T& b)             { return a >> b; }
     FGSTD_FORCE_INLINE static T bor(const T& a, const T& b)             { return a | b; }
     FGSTD_FORCE_INLINE static T band(const T& a, const T& b)            { return a & b; }
     FGSTD_FORCE_INLINE static T bxor(const T& a, const T& b)            { return a ^ b; }
-    FGSTD_FORCE_INLINE static const T& min(const T& a, const T& b)      { return a < b ? a : b; }
-    FGSTD_FORCE_INLINE static const T& max(const T& a, const T& b)      { return a < b ? b : a; }
 };
 
 template<typename T>

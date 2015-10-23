@@ -128,6 +128,7 @@ template <typename T> struct remove_cv
 };
 
 template <typename T> struct is_integral : priv::is_integral<typename remove_cv<T>::type> {};
+template <typename T> struct is_float : priv::is_float<typename remove_cv<T>::type> {};
 template <typename T> struct is_array : priv::is_array<typename remove_cv<T>::type> {};
 template <typename T> struct is_reference : priv::is_reference<typename remove_cv<T>::type> {};
 template <typename T> struct is_scalar : priv::is_scalar<typename remove_cv<T>::type> {};

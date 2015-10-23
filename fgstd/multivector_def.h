@@ -69,7 +69,7 @@ public:
         typedef typename TL::template get<N>::type type;
     };
 
-    template<unsigned N, typename TCHECK = typedef typename gettype<N>::type>
+    template<unsigned N>
     class view
     {
     public:
@@ -86,12 +86,24 @@ public:
         }
 
         type * const ptr;
-    private:
-        static void _compile_check() { fgstd_static_assert((is_same<type, TCHECK>::value)); }
     };
 
-    template<unsigned N> const typename view<N> getview() const;
-    template<unsigned N>       typename view<N> getview();
+    template<unsigned N>
+    class cview
+    {
+    public:
+        typedef typename gettype<N>::type type;
+        cview(const multivector<TL>& v) : ptr(v._ptr<N>()) {}
+
+        FGSTD_FORCE_INLINE const type& operator[](u32 i) const
+        {
+            return ptr[i];
+        }
+        const type * const ptr;
+    };
+
+    template<unsigned N>       cview<N> getcview() const { return cview<N>(*this); }
+    template<unsigned N>       view<N> getview()         { return view<N>(*this); }
     template<unsigned N> const typename gettype<N>::type& at(u32 i) const;
     template<unsigned N>       typename gettype<N>::type& at(u32 i);
     template<unsigned N> const typename gettype<N>::type *data() const;
