@@ -159,7 +159,7 @@ public:
 extern fgstd::IAllocator *fgstd::g_defaultAlloc;
 fgstd::IAllocator *fgstd::g_defaultAlloc;
 
-__declspec(align(32)) struct alntest
+struct FGSTD_ALIGN(32) alntest
 {
     u64 x;
     char a[5];
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 
 
      {
-        FGSTD_ALIGN(16) float a[] = {1,2,3,4,5,6,7,8};
+        float FGSTD_ALIGN(16) a[] = {1,2,3,4,5,6,7,8};
         fgstd::vector<float> v(a);
         fgstd::vector<float> c(fgstd_countof(a));
         c = (fgstd::expr(a) * 10.0f + 100.0f); // v + 100; //(v + v + 1) + (v * 100);

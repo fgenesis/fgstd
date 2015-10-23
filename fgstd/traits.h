@@ -5,11 +5,6 @@
 
 namespace fgstd {
 
-template <bool B, typename T = void> struct enable_if { };
-template <typename T>                struct enable_if<true, T> { typedef T type; };
-
-template<typename T, typename U> struct is_same;
-
 
 namespace priv {
 
@@ -24,6 +19,22 @@ struct IntegralConstant
 typedef IntegralConstant<bool, true>  CompileTrue;
 typedef IntegralConstant<bool, false> CompileFalse;
 template<bool V> struct CompileCheck : IntegralConstant<bool, V>{};
+}
+
+template <bool B, typename T = void> struct enable_if { };
+template <typename T>                struct enable_if<true, T> { typedef T type; };
+
+template<typename T, typename U> struct is_same;
+template <typename T, typename U> struct is_same      : priv::CompileFalse { };
+template <typename T>             struct is_same<T,T> : priv::CompileTrue  { };
+
+template<bool COND, typename A, typename B> struct TypeSwitch{};
+template <typename A, typename B> struct TypeSwitch<true, A, B> { typedef A type; };
+template <typename A, typename B> struct TypeSwitch<false, A, B> { typedef B type; };
+
+
+
+namespace priv {
 
 template <typename T> struct is_integral        : CompileFalse{};
 template<> struct is_integral<bool>             : CompileTrue{};
@@ -34,11 +45,30 @@ template<> struct is_integral<short>            : CompileTrue{};
 template<> struct is_integral<unsigned short>   : CompileTrue{};
 template<> struct is_integral<int>              : CompileTrue{};
 template<> struct is_integral<unsigned int>     : CompileTrue{};
-template<> struct is_integral<long>             : CompileTrue{};
-template<> struct is_integral<unsigned long>    : CompileTrue{};
-
 template<> struct is_integral<types::s64>       : CompileTrue{};
 template<> struct is_integral<types::u64>       : CompileTrue{};
+
+struct _dummyIntegralType1 {};
+struct _dummyIntegralType2 {};
+
+// The definition of long depends on OS
+template<> struct is_integral<
+    typename TypeSwitch<
+        is_same<int, long>::value || is_same<types::s64, long>::value,
+        _dummyIntegralType1,
+        long
+    >::type
+> : CompileTrue{};
+
+template<> struct is_integral<
+    typename TypeSwitch<
+        is_same<unsigned int, unsigned long>::value || is_same<types::u64, unsigned long>::value,
+        _dummyIntegralType2,
+        unsigned long
+    >::type
+> : CompileTrue{};
+
+
 
 template <typename T> struct is_float           : CompileFalse {};
 template<> struct is_float<float>               : CompileTrue{};
@@ -94,10 +124,6 @@ char (&_ArraySizeHelper( T (&a)[N]))[N];
 
 
 } // -----------------
-
-template<bool COND, typename A, typename B> struct TypeSwitch{};
-template <typename A, typename B> struct TypeSwitch<true, A, B> { typedef A type; };
-template <typename A, typename B> struct TypeSwitch<false, A, B> { typedef B type; };
 
 template <typename T> struct remove_ref            { typedef T type; };
 template <typename T> struct remove_ref<T&>        { typedef T type; };
@@ -234,9 +260,6 @@ struct Alignof
     };
 #endif
 };
-
-template <typename T, typename U> struct is_same      : priv::CompileFalse { };
-template <typename T>             struct is_same<T,T> : priv::CompileTrue  { };
 
 template<typename T> struct is_pod : priv::CompileCheck<
 #if defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__)

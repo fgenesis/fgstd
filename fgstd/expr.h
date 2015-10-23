@@ -1,10 +1,10 @@
 #pragma once
 
-#include "platform.h"
-#include "traits.h"
+#include "expr_def.h"
 #include "types.h"
 #include "op.h"
-#include "expr_def.h"
+#include "util.h"
+
 
 namespace fgstd {
 namespace et {

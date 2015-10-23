@@ -58,10 +58,10 @@ _FGSTD_MV_FUNCTOR3(mem_copy_distinct);
 #undef _FGSTD_MV_FUNCTOR2
 #undef _FGSTD_MV_FUNCTOR3
 
-template<typename V, template<typename V> class F, unsigned N = 0, bool rec = true>
+template<typename V, template<typename> class F, unsigned N = 0, bool rec = true>
 struct MV_apply;
 
-template<typename V, template<typename V> class F, unsigned N>
+template<typename V, template<typename> class F, unsigned N>
 struct MV_apply<V, F, N, true>
 {
     typedef F<V> FF;
@@ -79,11 +79,11 @@ struct MV_apply<V, F, N, true>
     }
 };
 
-template<typename V, template<typename V> class F, unsigned N>
+template<typename V, template<typename> class F, unsigned N>
 struct MV_apply<V, F, N, false>
 {
-    static FGSTD_FORCE_INLINE void apply2(void *p, u32 n, u32 o) {}
-    static FGSTD_FORCE_INLINE void apply3(void *dst, void *src, u32 n, u32 o1, u32 o2) {}
+    static FGSTD_FORCE_INLINE void apply2(void *, u32  u32) {}
+    static FGSTD_FORCE_INLINE void apply3(void *, void *, u32, u32, u32) {}
 };
 
 }
@@ -284,17 +284,17 @@ template<typename TL> template<unsigned N>
 FGSTD_FORCE_INLINE typename multivector<TL>::template gettype<N>::type * multivector<TL>::_getptr(void *p)
 {
     const u32 *offs = static_cast<u32*>(p);
-    return reinterpret_cast<gettype<N>::type*>( ((char*)p) + offs[N] );
+    return reinterpret_cast<typename gettype<N>::type*>( ((char*)p) + offs[N] );
 }
 
-template<typename T>
-FGSTD_FORCE_INLINE IAllocator *multivector<T>::get_alloc()
+template<typename TL>
+FGSTD_FORCE_INLINE IAllocator *multivector<TL>::get_alloc()
 {
     return _alloc;
 }
 
-template<typename T>
-FGSTD_FORCE_INLINE void multivector<T>::pop_back()
+template<typename TL>
+FGSTD_FORCE_INLINE void multivector<TL>::pop_back()
 {
     priv::MV_apply<multivector<TL>, priv::MV_mem_destroy>::apply2(_base, 1, --_sz);
 }

@@ -7,7 +7,7 @@ namespace fgstd {
 
 #ifdef FGSTD_USE_CPP11
 template <class T>
-typename remove_ref<T>::type&& move (T&& x) FGSTD_NOEXCEPT
+FGSTD_NOEXCEPT typename remove_ref<T>::type&& move (T&& x)
 {
     return static_cast<typename remove_ref<T>::type &&>(x);
 }
@@ -88,7 +88,7 @@ template<typename T> struct is_simple_op<less<T> > : priv::CompileTrue {};
 template<typename T> struct is_simple_op<equal<T> > : priv::CompileTrue{};
 
 template<typename T>
-FGSTD_FORCE_INLINE T *addressof(T& x) FGSTD_NOEXCEPT
+FGSTD_FORCE_INLINE FGSTD_NOEXCEPT T *addressof(T& x)
 {
     return (reinterpret_cast<T*>(
         &const_cast<char&>(
@@ -97,25 +97,25 @@ FGSTD_FORCE_INLINE T *addressof(T& x) FGSTD_NOEXCEPT
 
 #ifdef FGSTD_USE_CPP11
 template<typename T>
-FGSTD_FORCE_INLINE const T&& forward(const T& x) FGSTD_NOEXCEPT
+FGSTD_FORCE_INLINE FGSTD_NOEXCEPT const T&& forward(const T& x)
 {
     return static_cast<const typename remove_ref<T>::type&&>(x);
 }
 
 template<typename T>
-FGSTD_FORCE_INLINE T&& forward(T&& x) FGSTD_NOEXCEPT
+FGSTD_FORCE_INLINE FGSTD_NOEXCEPT T&& forward(T&& x)
 {
     return static_cast<typename remove_ref<T>::type&&>(x);
 }
 
 template<class T>
-FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type& x) FGSTD_NOEXCEPT
+FGSTD_FORCE_INLINE FGSTD_NOEXCEPT T&& forward(typename remove_ref<T>::type& x)
 {
     return (static_cast<T&&>(x));
 }
 
 template<class T>
-FGSTD_FORCE_INLINE T&& forward(typename remove_ref<T>::type&& x) FGSTD_NOEXCEPT
+FGSTD_FORCE_INLINE FGSTD_NOEXCEPT T&& forward(typename remove_ref<T>::type&& x)
 {
     static_assert(!is_lvalue_reference<T>::value, "bad forward call");
     return (static_cast<T&&>(x));
