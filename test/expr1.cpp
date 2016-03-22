@@ -193,14 +193,15 @@ int main(int argc, char **argv)
 
      {
         float FGSTD_ALIGN(16) a[] = {1,2,3,4,5,6,7,8};
-        fgstd::vector<float> v(a);
-        fgstd::vector<float> c(fgstd_countof(a));
-        c = (fgstd::expr(a) * 10.0f + 100.0f); // v + 100; //(v + v + 1) + (v * 100);
+        fgstd::vector<float> c;
+        auto ex = sqrt(fgstd::expr(a) * 10.0f + 100.0f);
+        printf("scalar: %f\n", ex[2]);
+        c = ex;
         for(u32 i = 0; i < c.size(); ++i)
             printf("[%u] = %f\n", i, c[i]);
     }
 
-
+    return 0;
 
 
     puts("----");

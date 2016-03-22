@@ -63,6 +63,21 @@ struct Store
         { Operators<T>::Scalar::store(ptr, x); }
 };
 
+#define _FGSTD_MAKE_FUNC(cls, mth) \
+    struct cls \
+    { \
+        template<typename T> struct Op \
+        { \
+            typedef Traits<T> Traits; \
+            enum { BLOCK_SIZE = Traits::BLOCK_SIZE }; \
+            typedef typename Traits::value_type value_type; \
+            typedef typename Traits::vec_type vec_type; \
+            FGSTD_FORCE_INLINE static vec_type applyVec(vec_type a) \
+                { return Operators<T>::Vec::mth(a); } \
+            FGSTD_FORCE_INLINE static value_type applyScalar(const value_type& a) \
+                { return Operators<T>::Scalar::mth(a); } \
+        }; \
+    };
 #define _FGSTD_MAKE_OPR(cls, mth, _) \
     struct cls \
     { \
@@ -78,7 +93,7 @@ struct Store
                 { return Operators<T>::Scalar::mth(a, b); } \
         }; \
     };
-#define _FGSTD_MAKE_FUNC(cls, mth) _FGSTD_MAKE_OPR(cls, mth, ?)
+#define _FGSTD_MAKE_FUNC2(cls, mth) _FGSTD_MAKE_OPR(cls, mth, ?)
 #include "_op_builder.h"
 
 

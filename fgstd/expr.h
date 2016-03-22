@@ -124,6 +124,26 @@ private:
     const E& _e;
 };
 
+template<typename OP, typename E>
+class UnOpExpr : public Expr<UnOpExpr<OP, E>, ExprTraits2<typename OP::value_type, typename OP::vec_type, typename E::size_type> >
+{
+public:
+    typedef typename E::size_type size_type;
+    typedef typename OP::value_type value_type;
+    typedef typename OP::vec_type vec_type;
+
+    FGSTD_FORCE_INLINE UnOpExpr(const E& a)
+        : _a(a)
+    {}
+
+    FGSTD_FORCE_INLINE size_type  size()                  const { return _a.size(); }
+    FGSTD_FORCE_INLINE value_type operator[](size_type i) const { return OP::applyScalar(_a[i]); }
+    FGSTD_FORCE_INLINE vec_type block(size_type i)        const { return OP::applyVec(_a.block(i)); }
+
+private:
+    const E _a;
+};
+
 template<typename OP, typename E1, typename E2>
 class BinOpExpr : public Expr<BinOpExpr<OP, E1, E2>, ExprTraits2<typename OP::value_type, typename OP::vec_type, typename E1::size_type> >
 {
@@ -207,6 +227,15 @@ struct BinOpCheck
     };
 };
 
+template<typename E>
+struct UnOpCheck
+{
+    enum
+    {
+        enable = is_usable_expr<E>::value
+    };
+};
+
 template<typename T>
 struct makeexpr
 {
@@ -237,6 +266,22 @@ FGSTD_FORCE_INLINE et::PointerExpr<T> expr(const T *ptr, u32 sz)
 {
     return PointerExpr<T>(ptr, sz);
 }
+
+template<typename OP, typename E>
+struct UnOpOverload
+{
+    typedef typename makeexpr<E>::type ET;
+    typedef typename OP::template Op<typename ET::value_type> Opr;
+    typedef UnOpExpr<
+        Opr,
+        ET
+    > expr_type;
+
+    static FGSTD_FORCE_INLINE expr_type makeOp(const E& a)
+    {
+        return expr_type(expr(a));
+    }
+};
 
 template<typename OP, typename E1, typename E2>
 struct BinOpOverload
@@ -301,7 +346,16 @@ using et::expr;
 
 }
 
-
+#define _FGSTD_MAKE_FUNC(cls, mth) \
+template <typename E> \
+typename fgstd::enable_if< \
+   fgstd::et::UnOpCheck<E>::enable, \
+   typename fgstd::et::UnOpOverload<fgstd::op::cls, E>::expr_type \
+>::type \
+FGSTD_FORCE_INLINE mth (const E& a) \
+{ \
+    return fgstd::et::UnOpOverload<fgstd::op::cls, E>::makeOp(a); \
+}
 #define _FGSTD_MAKE_OPR(cls, _, opr) \
 template <typename E1, typename E2> \
 typename fgstd::enable_if< \
@@ -312,5 +366,5 @@ FGSTD_FORCE_INLINE operator opr (const E1& a, const E2& b) \
 { \
     return fgstd::et::BinOpOverload<fgstd::op::cls, E1, E2>::makeOp(a, b); \
 }
-#define _FGSTD_MAKE_FUNC(cls, mth) /* TODO: fixme */
+#define _FGSTD_MAKE_FUNC2(cls, mth) /* TODO: fixme */
 #include "_op_builder.h"

@@ -84,7 +84,7 @@ void fgstd_test()
     fgstd_static_assert(!isscalar(intpair));
     fgstd_static_assert(isscalar(double));
     fgstd_static_assert(!isscalar(int2));
-    fgstd_static_assert(isscalar(ptrdiff_t));
+    //fgstd_static_assert(isscalar(ptrdiff_t));
 
     fgstd_static_assert(asz<u8>::ok);
     fgstd_static_assert(asz<u16>::ok);

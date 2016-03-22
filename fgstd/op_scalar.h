@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 namespace fgstd {
 namespace op {
 
@@ -24,6 +26,13 @@ struct ScalarOperators
     FGSTD_FORCE_INLINE static T bor(const T& a, const T& b)             { return a | b; }
     FGSTD_FORCE_INLINE static T band(const T& a, const T& b)            { return a & b; }
     FGSTD_FORCE_INLINE static T bxor(const T& a, const T& b)            { return a ^ b; }
+
+    FGSTD_FORCE_INLINE static T sqrt(const T& a)                        { return ::sqrt(a); }
+    FGSTD_FORCE_INLINE static T isqrt(const T& a, const T& b)           { return T(1) / ::sqrt(a); }
+    FGSTD_FORCE_INLINE static T pow(const T& a, const T& b)             { return ::pow(a, b); }
+    FGSTD_FORCE_INLINE static T sin(const T& a)                         { return ::sin(a); }
+    FGSTD_FORCE_INLINE static T cos(const T& a)                         { return ::sin(a); }
+
 };
 
 template<typename T>
