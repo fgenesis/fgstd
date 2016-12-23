@@ -342,29 +342,5 @@ FGSTD_FORCE_INLINE T& vector<T>::back()
     return _arr[_sz - 1];
 }
 
-template<typename T> template<typename E>
-vector<T>::vector(const E& e, IAllocator *a, typename E::is_expr_tag)
-: _arr(NULL), _sz(0), _capacity(0), _alloc(a)
-{
-    const u32 sz = e.size();
-    _resize_noinit(sz);
-    et::expr_store(_arr, e);
-}
-
-// ---- Expression template support ----
-template<typename T> template<typename E>
-FGSTD_FORCE_INLINE typename enable_if<et::is_usable_expr<E>::value, vector<T>&>::type
-vector<T>::operator=(const E& e)
-{
-    const u32 sz = e.size();
-    _resize_noinit(sz);
-    et::expr_store(_arr, e);
-    return *this;
-}
-
-
-// -------------------------------------
-
-
 
 }

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "types.h"
-#include "expr_def.h"
-
 
 namespace fgstd {
 
@@ -23,9 +21,6 @@ public:
 
     template<u32 SZ>
     vector(T (&arr)[SZ], IAllocator *a = g_defaultAlloc);
-
-    template<typename E>
-    vector(const E& e, IAllocator *a = g_defaultAlloc, typename E::is_expr_tag = false);
 
     vector(const vector<T>& v);
 #ifdef FGSTD_USE_CPP11
@@ -68,10 +63,6 @@ public:
 #else
     vector<T>& operator=(const vector<T>& v);
 #endif
-    template<typename E>
-    typename enable_if<et::is_usable_expr<E>::value, vector<T>&>::type
-        operator=(const E& e);
-
 
     IAllocator *get_alloc();
 
@@ -113,29 +104,6 @@ private:
     u32 _sz;
     u32 _capacity;
     IAllocator *_alloc;
-
-
-public:
-    class Expr : public et::Expr<vector<T> >
-    {
-    public:
-        typedef bool is_expr_source_tag;
-
-        typedef vector<T> container_type;
-        typedef T value_type;
-        typedef typename container_type::size_type size_type;
-
-        FGSTD_FORCE_INLINE Expr(const container_type &v)
-            : _v(v)
-        {}
-
-        FGSTD_FORCE_INLINE const value_type& operator[](size_type i) const { return _v[i]; }
-        FGSTD_FORCE_INLINE size_type  size()                         const { return _v.size(); }
-        FGSTD_FORCE_INLINE operator container_type const&() const { return _v; }
-
-    private:
-        const container_type& _v;
-    };
 };
 
 }
